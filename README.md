@@ -32,11 +32,14 @@ through sustainable lifestyle change.
    cp .env.example .env.local
    ```
 2. Fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your [Supabase](https://supabase.com) project.
-3. Run the profiles migration in `supabase/migrations/001_profiles.sql` via the Supabase SQL editor.
-4. In Supabase → Authentication → URL Configuration, add your site URL and redirect URL:
+3. Run migrations in the Supabase SQL editor:
+   - `supabase/migrations/001_profiles.sql`
+   - `supabase/migrations/002_onboarding.sql`
+4. Add `GEMINI_API_KEY` to `.env.local` for AI body assessment and program generation.
+5. In Supabase → Authentication → URL Configuration, add your site URL and redirect URL:
    - Site URL: `http://localhost:3000`
    - Redirect URLs: `http://localhost:3000/auth/callback`
-5. Install and run:
+6. Install and run:
    ```bash
    npm install
    npm run dev
@@ -50,7 +53,7 @@ through sustainable lifestyle change.
 | `/login` | Sign in |
 | `/forgot-password` | Password reset email |
 | `/auth/callback` | Email verification & OAuth callback |
-| `/onboarding` | First-time setup (required before dashboard) |
+| `/onboarding` | 7-step onboarding wizard (stats → goals → AI assessment → program → paywall) |
 | `/dashboard` | Main app (protected) |
 
 ## Status

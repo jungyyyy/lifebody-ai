@@ -71,6 +71,10 @@ export async function updateSession(request: NextRequest) {
 
   const onboardingCompleted = profile?.onboarding_completed === true;
 
+  if (pathname.startsWith("/api/onboarding")) {
+    return supabaseResponse;
+  }
+
   if (isAuthPage(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = onboardingCompleted ? "/dashboard" : "/onboarding";
