@@ -1,6 +1,18 @@
+import { calculateBmi } from "@/lib/program/bmi";
 import type { FullProgram } from "@/types/program";
 
-export function FastingTab({ program }: { program: FullProgram }) {
+export function FastingTab({
+  program,
+  heightCm,
+  currentWeightKg,
+}: {
+  program: FullProgram;
+  heightCm: number;
+  currentWeightKg: number;
+}) {
+  const bmi = calculateBmi(currentWeightKg, heightCm);
+  const isIf = program.fasting_is_intermittent ?? bmi > 25;
+
   const rules = [
     {
       label: "Daily calories",
@@ -14,16 +26,25 @@ export function FastingTab({ program }: { program: FullProgram }) {
       label: "Weekly fat loss target",
       value: `${program.weekly_fat_loss_kg} kg/week`,
     },
+    { label: "Program length", value: `${program.program_length_weeks} weeks` },
     { label: "Phase", value: program.phase_label },
+    { label: "Your BMI", value: bmi.toFixed(1) },
   ];
 
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-accent/20 bg-accent/5 p-5">
         <h3 className="text-sm font-medium text-accent uppercase tracking-wide">
-          Fasting window
+          {isIf ? "Intermittent fasting (16:8)" : "Overnight fast (12–13 hours)"}
         </h3>
-        <p className="mt-2 text-lg text-white">{program.fasting_window}</p>
+        <p className="mt-2 text-sm text-white leading-relaxed">
+          {program.fasting_window}
+        </p>
+        <p className="mt-3 text-xs text-gray-500">
+          {isIf
+            ? "Recommended because your BMI is above 25 — eat within an 8-hour window daily."
+            : "A light overnight fast supports recovery without aggressive restriction."}
+        </p>
       </div>
 
       <div>

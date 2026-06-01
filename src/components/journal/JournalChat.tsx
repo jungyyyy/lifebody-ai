@@ -82,6 +82,7 @@ export function JournalChat() {
       const res = await fetch("/api/journal/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ message: text, date }),
       });
       const json = await res.json();

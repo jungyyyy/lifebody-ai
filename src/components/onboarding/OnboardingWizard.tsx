@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OnboardingLayout } from "./OnboardingLayout";
 import { ErrorBanner, PrimaryButton, StepTitle } from "./ui";
@@ -8,10 +8,15 @@ import { Step1BasicStats } from "./steps/Step1BasicStats";
 import { Step2GoalBody } from "./steps/Step2GoalBody";
 import { Step3BodyDescription } from "./steps/Step3BodyDescription";
 import { Step4Assessment } from "./steps/Step4Assessment";
+import { Step5LossRate } from "./steps/Step5LossRate";
 import { Step5Lifestyle } from "./steps/Step5Lifestyle";
 import { Step6ProgramGen } from "./steps/Step6ProgramGen";
 import { Step7Premium } from "./steps/Step7Premium";
 import { validateStep } from "@/lib/onboarding/validation";
+import {
+  calculateProgramWeeks,
+  weightToLoseKg,
+} from "@/lib/program/duration";
 import {
   INITIAL_ONBOARDING_DATA,
   type BodyAssessment,
@@ -34,11 +39,16 @@ const STEP_TITLES: Record<number, { title: string; subtitle?: string }> = {
   },
   4: { title: "Your body assessment" },
   5: {
+    title: "How fast do you want to reach your goal?",
+    subtitle:
+      "Slower is more sustainable. Faster requires more discipline. Either way, you will get there.",
+  },
+  6: {
     title: "Your lifestyle",
     subtitle: "This helps us build a program that fits your real life.",
   },
-  6: { title: "Building your program" },
-  7: { title: "Unlock your program" },
+  7: { title: "Building your program" },
+  8: { title: "Unlock your program" },
 };
 
 export function OnboardingWizard() {
@@ -59,10 +69,19 @@ export function OnboardingWizard() {
 
   const [completing, setCompleting] = useState(false);
 
+  const programWeeks = useMemo(() => {
+    if (!data.assessment) return 12;
+    const w = parseFloat(data.currentWeightKg);
+    const rate = parseFloat(data.weeklyLossRateKg || "0.6");
+    return calculateProgramWeeks(
+      weightToLoseKg(w, data.assessment.goal_weight_kg),
+      rate
+    );
+  }, [data.assessment, data.currentWeightKg, data.weeklyLossRateKg]);
+
   const fetchAssessment = useCallback(async () => {
     setAssessmentLoading(true);
     setAssessmentError(null);
-
     try {
       const res = await fetch("/api/onboarding/assessment", {
         method: "POST",
@@ -71,7 +90,6 @@ export function OnboardingWizard() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Assessment failed");
-
       setData((d) => ({
         ...d,
         assessment: json.assessment as BodyAssessment,
@@ -88,9 +106,7 @@ export function OnboardingWizard() {
   const fetchProgram = useCallback(async () => {
     setProgramPhase("loading");
     setProgramError(null);
-
     const minDelay = new Promise((r) => setTimeout(r, 3000));
-
     try {
       const [res] = await Promise.all([
         fetch("/api/onboarding/program", {
@@ -100,10 +116,8 @@ export function OnboardingWizard() {
         }),
         minDelay,
       ]);
-
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Program generation failed");
-
       setProgramPhase("done");
     } catch (err) {
       setProgramPhase("error");
@@ -121,11 +135,7 @@ export function OnboardingWizard() {
   }, [step, data.assessment, fetchAssessment]);
 
   useEffect(() => {
-    if (
-      step === 6 &&
-      !programFetched.current &&
-      programPhase === "idle"
-    ) {
+    if (step === 7 && !programFetched.current && programPhase === "idle") {
       programFetched.current = true;
       fetchProgram();
     }
@@ -149,7 +159,6 @@ export function OnboardingWizard() {
   async function handleComplete() {
     setCompleting(true);
     setError(null);
-
     try {
       const res = await fetch("/api/onboarding/complete", {
         method: "POST",
@@ -158,7 +167,6 @@ export function OnboardingWizard() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Could not complete onboarding");
-
       router.refresh();
       router.push("/dashboard");
     } catch (err) {
@@ -168,11 +176,11 @@ export function OnboardingWizard() {
   }
 
   const meta = STEP_TITLES[step];
-  const showNav = step <= 3 || step === 5;
+  const showNav = step <= 3 || step === 5 || step === 6;
 
   return (
     <OnboardingLayout step={step}>
-      {meta && step !== 6 && (
+      {meta && step !== 7 && (
         <StepTitle title={meta.title} subtitle={meta.subtitle} />
       )}
 
@@ -189,18 +197,24 @@ export function OnboardingWizard() {
           onReady={() => setStep(5)}
         />
       )}
-      {step === 5 && <Step5Lifestyle data={data} setData={setData} />}
-      {step === 6 && (
+      {step === 5 && <Step5LossRate data={data} setData={setData} />}
+      {step === 6 && <Step5Lifestyle data={data} setData={setData} />}
+      {step === 7 && (
         <Step6ProgramGen
+          programWeeks={programWeeks}
           phase={programPhase === "idle" ? "loading" : programPhase}
           error={programError}
-          onShowProgram={() => setStep(7)}
+          onShowProgram={() => setStep(8)}
         />
       )}
-      {step === 7 && (
+      {step === 8 && (
         <>
           {error && <ErrorBanner message={error} />}
-          <Step7Premium onStartTrial={handleComplete} loading={completing} />
+          <Step7Premium
+            programWeeks={programWeeks}
+            onStartTrial={handleComplete}
+            loading={completing}
+          />
         </>
       )}
 
@@ -234,7 +248,7 @@ export function OnboardingWizard() {
         </div>
       )}
 
-      {step === 6 && programPhase === "error" && (
+      {step === 7 && programPhase === "error" && (
         <div className="mt-4">
           <PrimaryButton
             onClick={() => {

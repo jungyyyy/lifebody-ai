@@ -50,6 +50,7 @@ export type { GeneratedProgram } from "@/types/program";
 
 export interface OnboardingFormData {
   nickname: string;
+  weeklyLossRateKg: WeeklyLossRate | "";
   currentWeightKg: string;
   heightCm: string;
   age: string;
@@ -71,6 +72,7 @@ export interface OnboardingFormData {
 
 export const INITIAL_ONBOARDING_DATA: OnboardingFormData = {
   nickname: "",
+  weeklyLossRateKg: "",
   currentWeightKg: "",
   heightCm: "",
   age: "",
@@ -90,7 +92,9 @@ export const INITIAL_ONBOARDING_DATA: OnboardingFormData = {
   dietaryRestrictions: "",
 };
 
-export const TOTAL_ONBOARDING_STEPS = 7;
+export type WeeklyLossRate = "0.5" | "0.6" | "0.7";
+
+export const TOTAL_ONBOARDING_STEPS = 8;
 
 export const SWEETS_OPTIONS = [
   "Daily",

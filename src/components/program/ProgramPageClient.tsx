@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProgramHeader } from "@/components/program/ProgramHeader";
 import { MealPlanTab } from "@/components/program/tabs/MealPlanTab";
 import { FitnessTab } from "@/components/program/tabs/FitnessTab";
@@ -8,22 +8,17 @@ import { FastingTab } from "@/components/program/tabs/FastingTab";
 import { OverviewTab } from "@/components/program/tabs/OverviewTab";
 import type { FullProgram } from "@/types/program";
 
-const TABS = [
-  { id: "meals", label: "Meal Plan" },
-  { id: "fitness", label: "Fitness" },
-  { id: "fasting", label: "Fasting & Rules" },
-  { id: "overview", label: "12-Week Overview" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
+type TabId = "meals" | "fitness" | "fasting" | "overview";
 
 interface ProgramPayload {
   currentWeightKg: number;
   goalWeightKg: number;
+  heightCm: number;
   goalBodyLabel: string;
   startDate: string;
   endDate: string;
   currentWeek: number;
+  programLengthWeeks: number;
   program: FullProgram;
 }
 
@@ -43,6 +38,22 @@ export function ProgramPageClient() {
         setError(e instanceof Error ? e.message : "Failed to load program")
       );
   }, []);
+
+  const programWeeks = data?.programLengthWeeks ?? data?.program.program_length_weeks ?? 12;
+
+  const tabs = useMemo(
+    () =>
+      [
+        { id: "meals" as const, label: "Meal Plan" },
+        { id: "fitness" as const, label: "Fitness" },
+        { id: "fasting" as const, label: "Fasting & Rules" },
+        {
+          id: "overview" as const,
+          label: `${programWeeks}-Week Overview`,
+        },
+      ],
+    [programWeeks]
+  );
 
   if (error) {
     return (
@@ -74,10 +85,11 @@ export function ProgramPageClient() {
         startDate={data.startDate}
         endDate={data.endDate}
         currentWeek={data.currentWeek}
+        programLengthWeeks={programWeeks}
       />
 
       <div className="mt-6 flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -110,7 +122,12 @@ export function ProgramPageClient() {
         {tab === "fitness" && (
           <div>
             <h2 className="text-lg font-medium text-white mb-4">Fitness plan</h2>
-            <FitnessTab program={data.program} />
+            <FitnessTab
+              program={data.program}
+              onProgramUpdate={(program) =>
+                setData((d) => (d ? { ...d, program } : d))
+              }
+            />
           </div>
         )}
         {tab === "fasting" && (
@@ -118,13 +135,17 @@ export function ProgramPageClient() {
             <h2 className="text-lg font-medium text-white mb-4">
               Fasting &amp; rules
             </h2>
-            <FastingTab program={data.program} />
+            <FastingTab
+              program={data.program}
+              heightCm={data.heightCm}
+              currentWeightKg={data.currentWeightKg}
+            />
           </div>
         )}
         {tab === "overview" && (
           <div>
             <h2 className="text-lg font-medium text-white mb-4">
-              12-week overview
+              {programWeeks}-week overview
             </h2>
             <OverviewTab
               program={data.program}

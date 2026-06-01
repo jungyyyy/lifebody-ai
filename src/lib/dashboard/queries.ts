@@ -1,14 +1,26 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GeneratedProgram } from "@/types/onboarding";
+import type { GeneratedProgram } from "@/types/program";
 import { addDays, daysBetween, localDateString } from "@/lib/dates";
+import { getProgramLengthWeeks } from "@/lib/program/profile";
+import { programTotalDays } from "@/lib/program/duration";
 
-const PROGRAM_DAYS = 84;
+export interface SportLogSummary {
+  activity: string;
+  duration_minutes: number;
+}
+
+export interface WeekSportEntry {
+  date: string;
+  activity: string;
+  duration_minutes: number;
+}
 
 export interface DashboardSummary {
   nickname: string;
   displayDate: string;
   programDay: number;
   programTotalDays: number;
+  programLengthWeeks: number;
   calorieTarget: number;
   proteinTarget: number;
   todayCalories: number;
@@ -16,6 +28,8 @@ export interface DashboardSummary {
   fastingHours: number | null;
   weightToday: number | null;
   periodActive: boolean;
+  todaySports: SportLogSummary[];
+  weekSports: WeekSportEntry[];
   weekAvgCalories: number;
   weekAvgProtein: number;
   weekWeightChange: number | null;
@@ -29,6 +43,9 @@ export async function getDashboardSummary(
 ): Promise<DashboardSummary> {
   const weekStart = addDays(date, -6);
 
+  const programWeeks = await getProgramLengthWeeks(supabase, userId);
+  const totalDays = programTotalDays(programWeeks);
+
   const [
     profileRes,
     programRes,
@@ -39,6 +56,8 @@ export async function getDashboardSummary(
     fastingTodayRes,
     periodTodayRes,
     journalDaysRes,
+    sportTodayRes,
+    sportWeekRes,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -93,6 +112,18 @@ export async function getDashboardSummary(
       .eq("user_id", userId)
       .gte("log_date", weekStart)
       .lte("log_date", date),
+    supabase
+      .from("sport_logs")
+      .select("activity, duration_minutes")
+      .eq("user_id", userId)
+      .eq("log_date", date),
+    supabase
+      .from("sport_logs")
+      .select("log_date, activity, duration_minutes")
+      .eq("user_id", userId)
+      .gte("log_date", weekStart)
+      .lte("log_date", date)
+      .order("log_date", { ascending: true }),
   ]);
 
   const program = programRes.data?.program as GeneratedProgram | undefined;
@@ -131,14 +162,15 @@ export async function getDashboardSummary(
 
   const programStarted = profileRes.data?.program_started_at;
   const programDay = programStarted
-    ? Math.min(PROGRAM_DAYS, daysBetween(programStarted))
+    ? Math.min(totalDays, daysBetween(programStarted))
     : 1;
 
   return {
     nickname: profileRes.data?.nickname?.trim() || "there",
     displayDate: date,
     programDay,
-    programTotalDays: PROGRAM_DAYS,
+    programTotalDays: totalDays,
+    programLengthWeeks: programWeeks,
     calorieTarget,
     proteinTarget,
     todayCalories: Math.round(todayCalories),
@@ -150,6 +182,15 @@ export async function getDashboardSummary(
       ? Number(weightTodayRes.data.weight_kg)
       : null,
     periodActive: !!periodTodayRes.data,
+    todaySports: (sportTodayRes.data ?? []).map((s) => ({
+      activity: s.activity as string,
+      duration_minutes: s.duration_minutes as number,
+    })),
+    weekSports: (sportWeekRes.data ?? []).map((s) => ({
+      date: s.log_date as string,
+      activity: s.activity as string,
+      duration_minutes: s.duration_minutes as number,
+    })),
     weekAvgCalories: Math.round(weekAvgCalories),
     weekAvgProtein: Math.round(weekAvgProtein),
     weekWeightChange:
@@ -163,11 +204,13 @@ export async function getDashboardSummary(
 }
 
 export function defaultSummary(date: string): DashboardSummary {
+  const weeks = 12;
   return {
     nickname: "there",
     displayDate: date,
     programDay: 1,
-    programTotalDays: PROGRAM_DAYS,
+    programTotalDays: programTotalDays(weeks),
+    programLengthWeeks: weeks,
     calorieTarget: 1700,
     proteinTarget: 120,
     todayCalories: 0,
@@ -175,6 +218,8 @@ export function defaultSummary(date: string): DashboardSummary {
     fastingHours: null,
     weightToday: null,
     periodActive: false,
+    todaySports: [],
+    weekSports: [],
     weekAvgCalories: 0,
     weekAvgProtein: 0,
     weekWeightChange: null,

@@ -1,20 +1,22 @@
 import { PrimaryButton, SecondaryButton } from "../ui";
 
-const FEATURES = [
-  "Your personalized 12-week program",
-  "Weekly AI-generated meal prep plans",
-  "Daily food journal with AI calorie tracking",
-  "Weekly assessment & advice",
-  "Adaptive program that learns your habits",
-];
-
 export function Step7Premium({
+  programWeeks,
   onStartTrial,
   loading,
 }: {
+  programWeeks: number;
   onStartTrial: () => void;
   loading: boolean;
 }) {
+  const features = [
+    `Your personalized ${programWeeks}-week program`,
+    "Weekly AI-generated meal prep plans",
+    "Daily food journal with AI calorie tracking",
+    "Weekly assessment & advice",
+    "Adaptive program that learns your habits",
+  ];
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -27,7 +29,7 @@ export function Step7Premium({
       </div>
 
       <ul className="space-y-3">
-        {FEATURES.map((feature) => (
+        {features.map((feature) => (
           <li key={feature} className="flex items-start gap-3 text-sm text-gray-300">
             <span className="text-accent shrink-0">✅</span>
             <span>{feature}</span>

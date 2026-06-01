@@ -1,10 +1,12 @@
 import { LoadingDots, PrimaryButton } from "../ui";
 
 export function Step6ProgramGen({
+  programWeeks,
   phase,
   error,
   onShowProgram,
 }: {
+  programWeeks: number;
   phase: "loading" | "done" | "error";
   error: string | null;
   onShowProgram: () => void;
@@ -14,7 +16,7 @@ export function Step6ProgramGen({
       <div className="py-16 text-center">
         <LoadingDots />
         <p className="mt-6 text-lg font-medium text-white">
-          Hold on, I&apos;m building your 12-week program...
+          Hold on, I&apos;m building your {programWeeks}-week program...
         </p>
         <p className="mt-3 text-sm text-gray-400 max-w-sm mx-auto leading-relaxed">
           I&apos;m analyzing your lifestyle, preferences, and goals to create
@@ -38,9 +40,9 @@ export function Step6ProgramGen({
         ✨
       </div>
       <p className="text-lg font-medium text-white leading-relaxed">
-        Done! I built your 12-week program.
+        Done! I built your {programWeeks}-week program.
         <br />
-        Are you ready to transform your lifestyle in 12 weeks?
+        Are you ready to transform your lifestyle over {programWeeks} weeks?
       </p>
       <PrimaryButton onClick={onShowProgram}>
         Show me my program →

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { normalizeProgram, goalBodyLabel } from "@/lib/program/normalize";
 import { programEndDate, programWeekNumber } from "@/lib/program/dates";
+import { getProgramLengthWeeks } from "@/lib/program/profile";
 import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
 
@@ -9,31 +10,35 @@ export async function GET() {
   const { user, supabase, error } = await requireUser();
   if (error) return error;
 
-  const [profileRes, onboardingRes, programRes, weightRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("program_started_at")
-      .eq("id", user!.id)
-      .single(),
-    supabase
-      .from("onboarding_data")
-      .select("current_weight_kg, goal_body_type, body_assessment")
-      .eq("user_id", user!.id)
-      .single(),
-    supabase
-      .from("user_programs")
-      .select("program")
-      .eq("user_id", user!.id)
-      .eq("block_number", 1)
-      .maybeSingle(),
-    supabase
-      .from("weight_logs")
-      .select("weight_kg")
-      .eq("user_id", user!.id)
-      .order("log_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const [profileRes, onboardingRes, programRes, weightRes, programWeeks] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("program_started_at")
+        .eq("id", user!.id)
+        .single(),
+      supabase
+        .from("onboarding_data")
+        .select(
+          "current_weight_kg, height_cm, goal_body_type, body_assessment, cook_frequency"
+        )
+        .eq("user_id", user!.id)
+        .single(),
+      supabase
+        .from("user_programs")
+        .select("program")
+        .eq("user_id", user!.id)
+        .eq("block_number", 1)
+        .maybeSingle(),
+      supabase
+        .from("weight_logs")
+        .select("weight_kg")
+        .eq("user_id", user!.id)
+        .order("log_date", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      getProgramLengthWeeks(supabase, user!.id),
+    ]);
 
   if (!programRes.data?.program) {
     return NextResponse.json(
@@ -50,12 +55,13 @@ export async function GET() {
       ? Number(weightRes.data.weight_kg)
       : Number(onboardingRes.data?.current_weight_kg ?? 0);
   const goalWeight = assessment?.goal_weight_kg ?? currentWeight;
+  const heightCm = Number(onboardingRes.data?.height_cm ?? 170);
 
   const raw = programRes.data.program as GeneratedProgram;
   const program = normalizeProgram(raw, {
     currentWeightKg: currentWeight,
     goalWeightKg: goalWeight,
-    cuisines: undefined,
+    cookFrequency: onboardingRes.data?.cook_frequency ?? "2-3x",
   });
 
   const startIso =
@@ -65,12 +71,12 @@ export async function GET() {
   return NextResponse.json({
     currentWeightKg: currentWeight,
     goalWeightKg: goalWeight,
-    goalBodyLabel: goalBodyLabel(
-      onboardingRes.data?.goal_body_type ?? ""
-    ),
+    heightCm,
+    goalBodyLabel: goalBodyLabel(onboardingRes.data?.goal_body_type ?? ""),
     startDate,
-    endDate: programEndDate(startDate),
-    currentWeek: programWeekNumber(startIso),
+    endDate: programEndDate(startDate, programWeeks),
+    currentWeek: programWeekNumber(startIso, programWeeks),
+    programLengthWeeks: programWeeks,
     program,
   });
 }

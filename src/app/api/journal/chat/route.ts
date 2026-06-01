@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { buildJournalPrompt } from "@/lib/journal/prompts";
 import type { GeneratedProgram } from "@/types/onboarding";
 import type { JournalAiResponse } from "@/types/journal";
@@ -62,7 +63,8 @@ export async function POST(request: Request) {
     );
 
     if (aiResponse.action === "log_food") {
-      const { error: insertError } = await supabase.from("food_logs").insert({
+      const admin = createServiceRoleClient();
+      const { error: insertError } = await admin.from("food_logs").insert({
         user_id: user!.id,
         log_date: date,
         meal_type: aiResponse.meal_type,

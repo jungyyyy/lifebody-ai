@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { localDateString } from "@/lib/dates";
 
 export async function POST(request: Request) {
@@ -10,8 +11,10 @@ export async function POST(request: Request) {
   const active = Boolean(body.active);
   const date = String(body.date ?? localDateString());
 
+  const admin = createServiceRoleClient();
+
   if (active) {
-    const { error: insertError } = await supabase.from("period_logs").upsert(
+    const { error: insertError } = await admin.from("period_logs").upsert(
       { user_id: user!.id, log_date: date },
       { onConflict: "user_id,log_date" }
     );
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
   } else {
-    await supabase
+    await admin
       .from("period_logs")
       .delete()
       .eq("user_id", user!.id)

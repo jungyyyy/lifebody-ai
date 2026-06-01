@@ -7,6 +7,7 @@ export function ProgramHeader({
   startDate,
   endDate,
   currentWeek,
+  programLengthWeeks,
 }: {
   currentWeightKg: number;
   goalWeightKg: number;
@@ -14,8 +15,12 @@ export function ProgramHeader({
   startDate: string;
   endDate: string;
   currentWeek: number;
+  programLengthWeeks: number;
 }) {
-  const pct = Math.min(100, (currentWeek / 12) * 100);
+  const pct = Math.min(
+    100,
+    (currentWeek / Math.max(1, programLengthWeeks)) * 100
+  );
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card p-5 sm:p-6">
@@ -23,13 +28,15 @@ export function ProgramHeader({
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wide">Current</p>
           <p className="text-xl font-semibold text-white mt-1">
-            {currentWeightKg} <span className="text-sm font-normal text-gray-400">kg</span>
+            {currentWeightKg}{" "}
+            <span className="text-sm font-normal text-gray-400">kg</span>
           </p>
         </div>
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wide">Goal</p>
           <p className="text-xl font-semibold text-accent mt-1">
-            {goalWeightKg} <span className="text-sm font-normal text-gray-400">kg</span>
+            {goalWeightKg}{" "}
+            <span className="text-sm font-normal text-gray-400">kg</span>
           </p>
         </div>
         <div className="col-span-2 sm:col-span-1">
@@ -45,7 +52,9 @@ export function ProgramHeader({
       </div>
       <div className="mt-5">
         <div className="flex justify-between text-sm mb-1.5">
-          <span className="text-gray-400">Week {currentWeek} of 12</span>
+          <span className="text-gray-400">
+            Week {currentWeek} of {programLengthWeeks}
+          </span>
           <span className="text-accent font-medium">{Math.round(pct)}%</span>
         </div>
         <div className="h-2.5 w-full rounded-full bg-white/10 overflow-hidden">

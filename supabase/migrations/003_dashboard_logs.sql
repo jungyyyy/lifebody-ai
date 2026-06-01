@@ -60,17 +60,39 @@ alter table public.sport_logs enable row level security;
 alter table public.fasting_logs enable row level security;
 alter table public.period_logs enable row level security;
 
-create policy "Users manage own food logs"
-  on public.food_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant usage on schema public to authenticated, service_role;
+grant select, insert, update, delete on public.food_logs to authenticated;
+grant select, insert, update, delete on public.weight_logs to authenticated;
+grant select, insert, update, delete on public.sport_logs to authenticated;
+grant select, insert, update, delete on public.fasting_logs to authenticated;
+grant select, insert, update, delete on public.period_logs to authenticated;
+grant all on public.food_logs to service_role;
+grant all on public.weight_logs to service_role;
+grant all on public.sport_logs to service_role;
+grant all on public.fasting_logs to service_role;
+grant all on public.period_logs to service_role;
 
-create policy "Users manage own weight logs"
-  on public.weight_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "food_logs_select" on public.food_logs for select to authenticated using (auth.uid() = user_id);
+create policy "food_logs_insert" on public.food_logs for insert to authenticated with check (auth.uid() = user_id);
+create policy "food_logs_update" on public.food_logs for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "food_logs_delete" on public.food_logs for delete to authenticated using (auth.uid() = user_id);
 
-create policy "Users manage own sport logs"
-  on public.sport_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "weight_logs_select" on public.weight_logs for select to authenticated using (auth.uid() = user_id);
+create policy "weight_logs_insert" on public.weight_logs for insert to authenticated with check (auth.uid() = user_id);
+create policy "weight_logs_update" on public.weight_logs for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "weight_logs_delete" on public.weight_logs for delete to authenticated using (auth.uid() = user_id);
 
-create policy "Users manage own fasting logs"
-  on public.fasting_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "sport_logs_select" on public.sport_logs for select to authenticated using (auth.uid() = user_id);
+create policy "sport_logs_insert" on public.sport_logs for insert to authenticated with check (auth.uid() = user_id);
+create policy "sport_logs_update" on public.sport_logs for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "sport_logs_delete" on public.sport_logs for delete to authenticated using (auth.uid() = user_id);
 
-create policy "Users manage own period logs"
-  on public.period_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "fasting_logs_select" on public.fasting_logs for select to authenticated using (auth.uid() = user_id);
+create policy "fasting_logs_insert" on public.fasting_logs for insert to authenticated with check (auth.uid() = user_id);
+create policy "fasting_logs_update" on public.fasting_logs for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "fasting_logs_delete" on public.fasting_logs for delete to authenticated using (auth.uid() = user_id);
+
+create policy "period_logs_select" on public.period_logs for select to authenticated using (auth.uid() = user_id);
+create policy "period_logs_insert" on public.period_logs for insert to authenticated with check (auth.uid() = user_id);
+create policy "period_logs_update" on public.period_logs for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "period_logs_delete" on public.period_logs for delete to authenticated using (auth.uid() = user_id);

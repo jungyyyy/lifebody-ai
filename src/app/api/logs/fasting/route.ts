@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { localDateString } from "@/lib/dates";
 
 export async function POST(request: Request) {
@@ -14,7 +15,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid fasting hours" }, { status: 400 });
   }
 
-  const { error: upsertError } = await supabase.from("fasting_logs").upsert(
+  const admin = createServiceRoleClient();
+  const { error: upsertError } = await admin.from("fasting_logs").upsert(
     { user_id: user!.id, log_date: date, hours },
     { onConflict: "user_id,log_date" }
   );

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { upsertOnboardingData } from "@/lib/onboarding/db";
+import {
+  calculateProgramWeeks,
+  weightToLoseKg,
+} from "@/lib/program/duration";
 import type { OnboardingFormData } from "@/types/onboarding";
 import { GOAL_BODY_OPTIONS } from "@/types/onboarding";
 
@@ -13,6 +17,15 @@ export async function POST(request: Request) {
   const goalLabel =
     GOAL_BODY_OPTIONS.find((g) => g.id === body.goalBodyType)?.title ??
     body.goalBodyType;
+
+  const weight = parseFloat(body.currentWeightKg);
+  const weeklyRate = parseFloat(body.weeklyLossRateKg || "0.6");
+  const programWeeks = body.assessment
+    ? calculateProgramWeeks(
+        weightToLoseKg(weight, body.assessment.goal_weight_kg),
+        weeklyRate
+      )
+    : 12;
 
   const { error: onboardingError } = await upsertOnboardingData(
     supabase,
@@ -30,6 +43,8 @@ export async function POST(request: Request) {
       onboarding_completed: true,
       goal: goalLabel,
       nickname: body.nickname.trim(),
+      weekly_loss_rate_kg: weeklyRate,
+      program_length_weeks: programWeeks,
       program_started_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })

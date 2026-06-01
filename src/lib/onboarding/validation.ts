@@ -32,7 +32,12 @@ export function validateStep(
         return "Please describe your current body (at least 10 characters)";
       }
       return null;
-    case 5: {
+    case 5:
+      if (!data.weeklyLossRateKg) {
+        return "Please choose how fast you want to reach your goal";
+      }
+      return null;
+    case 6: {
       if (!data.cuisines.trim()) return "Please tell us what cuisines you love";
       if (!data.sweetsFrequency) return "Please select how often you eat sweets";
       if (!data.sportsEnjoyed.trim()) {

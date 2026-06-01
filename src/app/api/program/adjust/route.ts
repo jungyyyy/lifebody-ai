@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
 import { normalizeProgram } from "@/lib/program/normalize";
+import { normalizeMealPlanStructure } from "@/lib/program/mealPlanTransform";
 import {
   buildMealPlanAdjustPrompt,
   type MealPlanAdjustResult,
@@ -53,10 +54,20 @@ export async function POST(request: Request) {
       buildMealPlanAdjustPrompt(full, text)
     );
 
+    const { data: onboardingData } = await supabase
+      .from("onboarding_data")
+      .select("cook_frequency")
+      .eq("user_id", user!.id)
+      .single();
+
+    const meal_plan = normalizeMealPlanStructure(
+      result.meal_plan,
+      onboardingData?.cook_frequency ?? "2-3x"
+    );
+
     const updated: GeneratedProgram = {
       ...(programRes.data.program as GeneratedProgram),
-      weekly_meal_plan: result.weekly_meal_plan,
-      grocery_list: result.grocery_list,
+      meal_plan,
     };
 
     const { error: saveError } = await supabase

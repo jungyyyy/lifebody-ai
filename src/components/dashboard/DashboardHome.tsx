@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ProgressBar } from "@/components/app/ProgressBar";
 import type { DashboardSummary } from "@/lib/dashboard/queries";
 import { formatDisplayDate, localDateString } from "@/lib/dates";
+import { WeeklyAssessmentCta } from "@/components/assessment/WeeklyAssessmentCta";
+import { FourWeekAnalysisCta } from "@/components/four-week/FourWeekAnalysisCta";
 import {
   FastingModal,
   SportModal,
@@ -48,6 +50,11 @@ export function DashboardHome({ initialNickname }: { initialNickname: string }) 
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+      <div className="space-y-3">
+        <FourWeekAnalysisCta />
+        <WeeklyAssessmentCta />
+      </div>
+
       {toast && (
         <div className="mb-4 rounded-lg border border-accent/20 bg-accent/10 px-4 py-3 text-sm text-accent">
           {toast}
@@ -66,7 +73,7 @@ export function DashboardHome({ initialNickname }: { initialNickname: string }) 
         {s && (
           <p className="mt-1 text-sm text-gray-400">
             {formatDisplayDate(s.displayDate)} · Day {s.programDay} of{" "}
-            {s.programTotalDays}
+            {s.programTotalDays} · Week {Math.min(s.programLengthWeeks, Math.ceil(s.programDay / 7))} of {s.programLengthWeeks}
           </p>
         )}
       </div>
@@ -112,6 +119,35 @@ export function DashboardHome({ initialNickname }: { initialNickname: string }) 
           />
         </div>
       </div>
+
+      {s && (
+        <div className="mt-6">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+            Today&apos;s activity
+          </p>
+          {s.todaySports.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {s.todaySports.map((sport, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background px-3 py-1.5 text-sm text-gray-200"
+                >
+                  <span aria-hidden>🏃</span>
+                  {sport.activity} · {sport.duration_minutes} min
+                </span>
+              ))}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setSportOpen(true)}
+              className="text-sm text-gray-500 hover:text-accent transition-colors"
+            >
+              + Log activity
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-6">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">

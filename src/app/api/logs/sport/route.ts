@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { localDateString } from "@/lib/dates";
 
 export async function POST(request: Request) {
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
   }
 
-  const { error: insertError } = await supabase.from("sport_logs").insert({
+  const admin = createServiceRoleClient();
+  const { error: insertError } = await admin.from("sport_logs").insert({
     user_id: user!.id,
     log_date: date,
     activity,

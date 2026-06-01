@@ -76,7 +76,10 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api/journal") ||
     pathname.startsWith("/api/logs") ||
     pathname.startsWith("/api/dashboard") ||
-    pathname.startsWith("/api/program")
+    pathname.startsWith("/api/program") ||
+    pathname.startsWith("/api/assessment") ||
+    pathname.startsWith("/api/progress") ||
+    pathname.startsWith("/api/four-week-analysis")
   ) {
     return supabaseResponse;
   }

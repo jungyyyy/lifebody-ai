@@ -7,9 +7,11 @@ export function OverviewTab({
   program: FullProgram;
   currentWeightKg: number;
 }) {
-  const milestones = program.week_milestones.slice(0, 12);
+  const milestones = program.week_milestones;
   const showMaintenance =
     program.maintenance_break?.show || program.maintenance_note;
+  const maintenanceWeek =
+    program.maintenance_break?.start_after_week ?? program.program_length_weeks;
 
   return (
     <div className="space-y-4">
@@ -52,7 +54,7 @@ export function OverviewTab({
             <div>
               <p className="font-medium text-amber-200">Maintenance break</p>
               <p className="text-sm text-gray-400 mt-1">
-                After week 12, take a{" "}
+                After week {maintenanceWeek}, take a{" "}
                 {program.maintenance_break?.duration_label ?? "4–8 week"}{" "}
                 maintenance phase before your next fat-loss block.
                 {program.maintenance_note && (

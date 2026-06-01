@@ -15,14 +15,16 @@ const GEMINI_MODEL = resolveGeminiModel();
 
 export async function generateGeminiJson<T>(
   prompt: string,
-  systemInstruction?: string
+  systemInstruction?: string,
+  model?: string
 ): Promise<T> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+  const modelId = model?.trim() || GEMINI_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`;
 
   const body: Record<string, unknown> = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
