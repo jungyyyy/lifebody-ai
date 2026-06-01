@@ -6,6 +6,9 @@ export function validateStep(
 ): string | null {
   switch (step) {
     case 1: {
+      if (!data.nickname.trim() || data.nickname.trim().length < 2) {
+        return "What should we call you? (at least 2 characters)";
+      }
       const weight = parseFloat(data.currentWeightKg);
       const height = parseFloat(data.heightCm);
       const age = parseInt(data.age, 10);

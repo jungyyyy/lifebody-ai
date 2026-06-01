@@ -11,6 +11,15 @@ export function Step1BasicStats({
   return (
     <div className="space-y-4">
       <div>
+        <FieldLabel htmlFor="nickname">What should we call you?</FieldLabel>
+        <TextInput
+          id="nickname"
+          value={data.nickname}
+          onChange={(v) => setData((d) => ({ ...d, nickname: v }))}
+          placeholder="e.g. Alex"
+        />
+      </div>
+      <div>
         <FieldLabel htmlFor="weight">Current weight (kg)</FieldLabel>
         <TextInput
           id="weight"

@@ -66,6 +66,7 @@ export interface GeneratedProgram {
 }
 
 export interface OnboardingFormData {
+  nickname: string;
   currentWeightKg: string;
   heightCm: string;
   age: string;
@@ -86,6 +87,7 @@ export interface OnboardingFormData {
 }
 
 export const INITIAL_ONBOARDING_DATA: OnboardingFormData = {
+  nickname: "",
   currentWeightKg: "",
   heightCm: "",
   age: "",

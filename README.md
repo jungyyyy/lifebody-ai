@@ -35,6 +35,8 @@ through sustainable lifestyle change.
 3. Run migrations in the Supabase SQL editor:
    - `supabase/migrations/001_profiles.sql`
    - `supabase/migrations/002_onboarding.sql`
+   - `supabase/migrations/003_dashboard_logs.sql`
+   - `supabase/migrations/004_profiles_nickname.sql` (if `nickname` is missing on `profiles`)
 4. Add `GEMINI_API_KEY` to `.env.local` for AI body assessment and program generation.
 5. In Supabase → Authentication → URL Configuration, add your site URL and redirect URL:
    - Site URL: `http://localhost:3000`

@@ -29,6 +29,8 @@ export async function POST(request: Request) {
     .update({
       onboarding_completed: true,
       goal: goalLabel,
+      nickname: body.nickname.trim(),
+      program_started_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", user!.id);

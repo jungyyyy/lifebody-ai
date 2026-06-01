@@ -20,8 +20,8 @@ import {
 
 const STEP_TITLES: Record<number, { title: string; subtitle?: string }> = {
   1: {
-    title: "Basic stats",
-    subtitle: "We'll use this to personalize your body assessment.",
+    title: "Let's get started",
+    subtitle: "Tell us your name and basic stats so we can personalize your plan.",
   },
   2: {
     title: "What's your goal body?",

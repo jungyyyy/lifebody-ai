@@ -71,7 +71,12 @@ export async function updateSession(request: NextRequest) {
 
   const onboardingCompleted = profile?.onboarding_completed === true;
 
-  if (pathname.startsWith("/api/onboarding")) {
+  if (
+    pathname.startsWith("/api/onboarding") ||
+    pathname.startsWith("/api/journal") ||
+    pathname.startsWith("/api/logs") ||
+    pathname.startsWith("/api/dashboard")
+  ) {
     return supabaseResponse;
   }
 

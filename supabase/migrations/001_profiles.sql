@@ -3,8 +3,10 @@
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
+  nickname text,
   onboarding_completed boolean not null default false,
   goal text,
+  program_started_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
