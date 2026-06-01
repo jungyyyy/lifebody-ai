@@ -1,5 +1,12 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHome } from "@/components/dashboard/DashboardHome";
+import { PaymentSuccessToast } from "@/components/premium/PaymentSuccessToast";
+import {
+  getAccessState,
+  isPremiumActive,
+  PREMIUM_PROFILE_FIELDS,
+} from "@/lib/premium";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -9,13 +16,23 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("nickname")
+    .select(`${PREMIUM_PROFILE_FIELDS}, nickname`)
     .eq("id", user!.id)
     .single();
 
+  const accessState = getAccessState(profile);
+
   return (
-    <DashboardHome
-      initialNickname={profile?.nickname?.trim() || "there"}
-    />
+    <>
+      <Suspense fallback={null}>
+        <PaymentSuccessToast />
+      </Suspense>
+      <DashboardHome
+        initialNickname={profile?.nickname?.trim() || "there"}
+        accessState={accessState}
+        trialEndsAt={profile?.trial_ends_at ?? null}
+        premiumActive={isPremiumActive(profile)}
+      />
+    </>
   );
 }

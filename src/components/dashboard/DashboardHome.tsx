@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ProgressBar } from "@/components/app/ProgressBar";
 import type { DashboardSummary } from "@/lib/dashboard/queries";
 import { formatDisplayDate, localDateString } from "@/lib/dates";
+import type { AccessState } from "@/lib/premium";
+import { DashboardAccessBanner } from "@/components/premium/DashboardAccessBanner";
 import { WeeklyAssessmentCta } from "@/components/assessment/WeeklyAssessmentCta";
 import { FourWeekAnalysisCta } from "@/components/four-week/FourWeekAnalysisCta";
 import {
@@ -13,7 +15,17 @@ import {
   WeightModal,
 } from "./LogModals";
 
-export function DashboardHome({ initialNickname }: { initialNickname: string }) {
+export function DashboardHome({
+  initialNickname,
+  premiumActive,
+  accessState,
+  trialEndsAt,
+}: {
+  initialNickname: string;
+  premiumActive: boolean;
+  accessState: AccessState;
+  trialEndsAt: string | null;
+}) {
   const [date] = useState(() => localDateString());
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -50,10 +62,17 @@ export function DashboardHome({ initialNickname }: { initialNickname: string }) 
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-      <div className="space-y-3">
-        <FourWeekAnalysisCta />
-        <WeeklyAssessmentCta />
-      </div>
+      <DashboardAccessBanner
+        accessState={accessState}
+        trialEndsAt={trialEndsAt}
+      />
+
+      {premiumActive && (
+        <div className="space-y-3">
+          <FourWeekAnalysisCta />
+          <WeeklyAssessmentCta />
+        </div>
+      )}
 
       {toast && (
         <div className="mb-4 rounded-lg border border-accent/20 bg-accent/10 px-4 py-3 text-sm text-accent">

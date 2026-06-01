@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
 import { normalizeProgram } from "@/lib/program/normalize";
 import { normalizeMealPlanStructure } from "@/lib/program/mealPlanTransform";
@@ -11,8 +11,8 @@ import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
 
 export async function POST(request: Request) {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   const { message } = await request.json();
   const text = String(message ?? "").trim();

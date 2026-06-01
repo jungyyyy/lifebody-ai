@@ -1,57 +1,57 @@
-import { PrimaryButton, SecondaryButton } from "../ui";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { PaywallScreen } from "@/components/premium/PaywallScreen";
+import type { OnboardingFormData } from "@/types/onboarding";
 
 export function Step7Premium({
   programWeeks,
-  onStartTrial,
-  loading,
+  onboardingData,
 }: {
   programWeeks: number;
-  onStartTrial: () => void;
-  loading: boolean;
+  onboardingData: OnboardingFormData;
 }) {
-  const features = [
-    `Your personalized ${programWeeks}-week program`,
-    "Weekly AI-generated meal prep plans",
-    "Daily food journal with AI calorie tracking",
-    "Weekly assessment & advice",
-    "Adaptive program that learns your habits",
-  ];
+  const router = useRouter();
+  const [maybeLaterLoading, setMaybeLaterLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function completeOnboarding() {
+    const res = await fetch("/api/onboarding/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(onboardingData),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? "Could not complete onboarding");
+  }
+
+  async function handleMaybeLater() {
+    setMaybeLaterLoading(true);
+    setError(null);
+    try {
+      await completeOnboarding();
+      router.refresh();
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setMaybeLaterLoading(false);
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <p className="text-3xl" aria-hidden>
-          🔓
+    <div>
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-200">
+          {error}
         </p>
-        <h2 className="mt-3 text-xl font-semibold text-white">
-          Unlock Your Full Program
-        </h2>
-      </div>
-
-      <ul className="space-y-3">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-3 text-sm text-gray-300">
-            <span className="text-accent shrink-0">✅</span>
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <div className="space-y-3 pt-2">
-        <PrimaryButton onClick={onStartTrial} disabled={loading}>
-          {loading ? "Setting up…" : "Start 3-Day Free Trial"}
-        </PrimaryButton>
-        <SecondaryButton
-          onClick={() => alert("Stripe checkout coming soon!")}
-          disabled={loading}
-        >
-          Subscribe for €10/month
-        </SecondaryButton>
-      </div>
-
-      <p className="text-center text-xs text-gray-500">
-        Cancel anytime. No commitment.
-      </p>
+      )}
+      <PaywallScreen
+        programWeeks={programWeeks}
+        onMaybeLater={handleMaybeLater}
+        maybeLaterLoading={maybeLaterLoading}
+        onBeforeCheckout={completeOnboarding}
+      />
     </div>
   );
 }

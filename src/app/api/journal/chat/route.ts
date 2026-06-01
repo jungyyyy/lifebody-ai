@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { buildJournalPrompt } from "@/lib/journal/prompts";
@@ -8,8 +8,8 @@ import type { JournalAiResponse } from "@/types/journal";
 import { localDateString } from "@/lib/dates";
 
 export async function POST(request: Request) {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   const body = await request.json();
   const message = String(body.message ?? "").trim();

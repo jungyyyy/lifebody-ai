@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import type { FourWeekAnalysisData } from "@/types/fourWeekAnalysis";
 
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   const { data, error: dbError } = await supabase
     .from("four_week_analyses")

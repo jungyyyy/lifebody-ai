@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import { normalizeProgram, goalBodyLabel } from "@/lib/program/normalize";
 import { programEndDate, programWeekNumber } from "@/lib/program/dates";
 import { getProgramLengthWeeks } from "@/lib/program/profile";
@@ -7,8 +7,8 @@ import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
 
 export async function GET() {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   const [profileRes, onboardingRes, programRes, weightRes, programWeeks] =
     await Promise.all([

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import { normalizeProgram, goalBodyLabel } from "@/lib/program/normalize";
 import {
   programNeedsFitnessRegeneration,
@@ -10,8 +10,8 @@ import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
 
 export async function POST(request: Request) {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   let part: "meal" | "fitness" | "both" = "both";
   try {

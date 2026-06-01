@@ -67,7 +67,6 @@ export function OnboardingWizard() {
   const [programError, setProgramError] = useState<string | null>(null);
   const programFetched = useRef(false);
 
-  const [completing, setCompleting] = useState(false);
 
   const programWeeks = useMemo(() => {
     if (!data.assessment) return 12;
@@ -156,25 +155,6 @@ export function OnboardingWizard() {
     setStep((s) => Math.max(1, s - 1));
   }
 
-  async function handleComplete() {
-    setCompleting(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/onboarding/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Could not complete onboarding");
-      router.refresh();
-      router.push("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setCompleting(false);
-    }
-  }
-
   const meta = STEP_TITLES[step];
   const showNav = step <= 3 || step === 5 || step === 6;
 
@@ -212,8 +192,7 @@ export function OnboardingWizard() {
           {error && <ErrorBanner message={error} />}
           <Step7Premium
             programWeeks={programWeeks}
-            onStartTrial={handleComplete}
-            loading={completing}
+            onboardingData={data}
           />
         </>
       )}

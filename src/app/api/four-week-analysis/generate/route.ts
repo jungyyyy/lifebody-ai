@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api/auth";
+import { requirePremium } from "@/lib/api/auth";
 import { generateFourWeekAnalysis } from "@/lib/four-week/generate";
 import {
   canShowFourWeekAnalysisCta,
@@ -9,8 +9,8 @@ import { programWeekNumber } from "@/lib/program/dates";
 import { getProgramLengthWeeks } from "@/lib/program/profile";
 
 export async function POST() {
-  const { user, supabase, error } = await requireUser();
-  if (error) return error;
+  const { user, supabase, premiumError } = await requirePremium();
+  if (premiumError) return premiumError;
 
   const [profileRes, programWeeks, analysesRes] = await Promise.all([
     supabase
