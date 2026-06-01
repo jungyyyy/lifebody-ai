@@ -46,24 +46,7 @@ export interface BodyAssessment {
   motivational_close: string;
 }
 
-export interface GeneratedProgram {
-  calorie_target: number;
-  protein_target_g: number;
-  fasting_window: string;
-  weekly_fat_loss_kg: number;
-  phase_label: string;
-  maintenance_note: string | null;
-  meal_structure: {
-    overview: string;
-    daily_template: string;
-  };
-  exercise_plan: {
-    overview: string;
-    weekly_schedule: string;
-  };
-  block_summary: string;
-  week_highlights: string[];
-}
+export type { GeneratedProgram } from "@/types/program";
 
 export interface OnboardingFormData {
   nickname: string;

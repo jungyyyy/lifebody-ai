@@ -3,7 +3,9 @@ import { requireUser } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
 import { buildProgramPrompt } from "@/lib/onboarding/prompts";
 import { upsertOnboardingData } from "@/lib/onboarding/db";
-import type { GeneratedProgram, OnboardingFormData } from "@/types/onboarding";
+import type { OnboardingFormData } from "@/types/onboarding";
+import type { GeneratedProgram } from "@/types/program";
+import { normalizeProgram } from "@/lib/program/normalize";
 
 export async function POST(request: Request) {
   const { user, supabase, error } = await requireUser();
@@ -46,11 +48,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: onboardingError.message }, { status: 500 });
     }
 
+    const normalized = normalizeProgram(program, {
+      currentWeightKg: weight,
+      goalWeightKg: body.assessment.goal_weight_kg,
+      cuisines: body.cuisines,
+    });
+
     const { error: programError } = await supabase.from("user_programs").upsert(
       {
         user_id: user!.id,
         block_number: 1,
-        program,
+        program: normalized,
       },
       { onConflict: "user_id,block_number" }
     );
@@ -59,7 +67,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: programError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ program });
+    return NextResponse.json({ program: normalized });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Program generation failed";
     return NextResponse.json({ error: message }, { status: 500 });

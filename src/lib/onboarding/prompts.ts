@@ -79,23 +79,42 @@ RULES (must follow):
 - ${bmi > 25 ? "Recommend 16:8 intermittent fasting" : "Recommend minimum 12–13 hours fasting window daily"}
 ${needsMaintenanceNote ? `- IMPORTANT: User needs to lose more than 8kg. Include maintenance_note explaining a 4–8 week maintenance break is recommended after this 12-week block before the next block.` : "- maintenance_note should be null"}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with this exact structure (all fields required):
 {
   "calorie_target": number,
   "protein_target_g": number,
   "fasting_window": string,
-  "weekly_fat_loss_kg": number (0.5 to 0.7),
-  "phase_label": string (e.g. "Fat loss + muscle building"),
+  "weekly_fat_loss_kg": number,
+  "phase_label": string,
   "maintenance_note": string or null,
-  "meal_structure": {
-    "overview": string,
-    "daily_template": string
+  "meal_structure": { "overview": string, "daily_template": string },
+  "exercise_plan": { "overview": string, "weekly_schedule": string },
+  "block_summary": string,
+  "week_highlights": string[],
+  "weekly_meal_plan": {
+    "monday": { "breakfast": meal, "lunch": meal, "dinner": meal, "snack": meal },
+    "tuesday": { ...same },
+    "wednesday": { ... }, "thursday": { ... }, "friday": { ... }, "saturday": { ... }, "sunday": { ... }
   },
-  "exercise_plan": {
-    "overview": string,
-    "weekly_schedule": string
-  },
-  "block_summary": string (2-3 sentences),
-  "week_highlights": string[] (4-6 bullet highlights for the 12-week journey)
-}`;
+  "grocery_list": string[] (combined unique ingredients for the week),
+  "workout_days": [
+    { "category": "upper", "title": "Upper Body Day", "exercises": [{ "name": string, "sets": string, "reps": string, "tip": string }] },
+    { "category": "lower", "title": "Lower Body Day", "exercises": [...] },
+    { "category": "other", "title": "Cardio / Recovery", "exercises": [...] }
+  ],
+  "mindset_notes": string[] (4-6 short encouraging reminders),
+  "week_milestones": [{ "week": 1, "expected_weight_kg": number, "focus": string }, ... through week 12],
+  "maintenance_break": ${needsMaintenanceNote ? '{ "show": true, "start_after_week": 12, "duration_label": "4-8 weeks" }' : "null"}
+}
+
+Where meal = {
+  "name": string,
+  "calories": number,
+  "protein": number,
+  "recipe": string (2-4 sentences),
+  "ingredients": string[] (3-8 items with amounts)
+}
+
+Meals must reflect cuisines the user loves, respect restrictions, and sum close to daily calorie_target and protein_target_g per day.
+Use varied, realistic meal names — not generic placeholders.`;
 }
