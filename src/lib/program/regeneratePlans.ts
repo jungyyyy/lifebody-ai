@@ -16,6 +16,7 @@ import type {
   StructuredMealPlan,
 } from "@/types/program";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import type { Locale } from "@/i18n/routing";
 
 const MODEL = "gemini-2.5-flash";
 
@@ -56,7 +57,8 @@ export async function loadOnboardingForUser(
 
 export async function regenerateMealPlan(
   onboarding: OnboardingFormData,
-  program: GeneratedProgram
+  program: GeneratedProgram,
+  locale: Locale = "en"
 ): Promise<StructuredMealPlan> {
   const raw = await generateGeminiJson<StructuredMealPlan>(
     buildMealPlanRegeneratePrompt(onboarding, {
@@ -64,25 +66,29 @@ export async function regenerateMealPlan(
       protein_target_g: program.protein_target_g,
     }),
     "Output valid JSON only. Meal prep structure with max 4 unique dishes for 2-3x/week cooks.",
-    MODEL
+    MODEL,
+    locale
   );
   return normalizeMealPlanStructure(raw, onboarding.cookFrequency);
 }
 
 export async function regenerateFitnessPlan(
-  onboarding: OnboardingFormData
+  onboarding: OnboardingFormData,
+  locale: Locale = "en"
 ): Promise<StructuredFitnessPlan> {
   return generateGeminiJson<StructuredFitnessPlan>(
     buildFitnessPlanRegeneratePrompt(onboarding),
     "Output valid JSON only.",
-    MODEL
+    MODEL,
+    locale
   );
 }
 
 export async function ensureProgramPlans(
   supabase: SupabaseClient,
   userId: string,
-  part: "meal" | "fitness" | "both" = "both"
+  part: "meal" | "fitness" | "both" = "both",
+  locale: Locale = "en"
 ): Promise<GeneratedProgram> {
   const { data: row } = await supabase
     .from("user_programs")
@@ -109,7 +115,7 @@ export async function ensureProgramPlans(
   if (needMeal) {
     program = {
       ...program,
-      meal_plan: await regenerateMealPlan(onboarding, program),
+      meal_plan: await regenerateMealPlan(onboarding, program, locale),
     };
   } else if (program.meal_plan && hasValidMealPlan(program.meal_plan, cookFreq)) {
     program = {
@@ -121,7 +127,7 @@ export async function ensureProgramPlans(
   if (needFitness) {
     program = {
       ...program,
-      fitness_plan: await regenerateFitnessPlan(onboarding),
+      fitness_plan: await regenerateFitnessPlan(onboarding, locale),
     };
   }
 

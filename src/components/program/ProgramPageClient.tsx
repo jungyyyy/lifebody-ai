@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ProgramHeader } from "@/components/program/ProgramHeader";
 import { MealPlanTab } from "@/components/program/tabs/MealPlanTab";
 import { FitnessTab } from "@/components/program/tabs/FitnessTab";
@@ -23,6 +24,7 @@ interface ProgramPayload {
 }
 
 export function ProgramPageClient() {
+  const t = useTranslations("program");
   const [data, setData] = useState<ProgramPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("meals");
@@ -31,37 +33,36 @@ export function ProgramPageClient() {
     fetch("/api/program")
       .then(async (res) => {
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Failed to load program");
+        if (!res.ok) throw new Error(json.error ?? t("loadFailed"));
         setData(json);
       })
       .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load program")
+        setError(e instanceof Error ? e.message : t("loadFailed"))
       );
-  }, []);
+  }, [t]);
 
-  const programWeeks = data?.programLengthWeeks ?? data?.program.program_length_weeks ?? 12;
+  const programWeeks =
+    data?.programLengthWeeks ?? data?.program.program_length_weeks ?? 12;
 
   const tabs = useMemo(
     () =>
       [
-        { id: "meals" as const, label: "Meal Plan" },
-        { id: "fitness" as const, label: "Fitness" },
-        { id: "fasting" as const, label: "Fasting & Rules" },
+        { id: "meals" as const, label: t("tabMeals") },
+        { id: "fitness" as const, label: t("tabFitness") },
+        { id: "fasting" as const, label: t("tabFasting") },
         {
           id: "overview" as const,
-          label: `${programWeeks}-Week Overview`,
+          label: t("tabOverviewWeeks", { weeks: programWeeks }),
         },
       ],
-    [programWeeks]
+    [programWeeks, t]
   );
 
   if (error) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <p className="text-red-400">{error}</p>
-        <p className="mt-2 text-sm text-gray-500">
-          Complete onboarding to generate your program.
-        </p>
+        <p className="mt-2 text-sm text-gray-500">{t("completeOnboardingHint")}</p>
       </div>
     );
   }
@@ -69,14 +70,14 @@ export function ProgramPageClient() {
   if (!data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <p className="text-gray-500 animate-pulse">Loading your program…</p>
+        <p className="text-gray-500 animate-pulse">{t("loadingProgram")}</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8 pb-24">
-      <h1 className="text-2xl font-semibold text-white mb-4">My Program</h1>
+      <h1 className="text-2xl font-semibold text-white mb-4">{t("title")}</h1>
 
       <ProgramHeader
         currentWeightKg={data.currentWeightKg}
@@ -89,18 +90,18 @@ export function ProgramPageClient() {
       />
 
       <div className="mt-6 flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
-        {tabs.map((t) => (
+        {tabs.map((tabItem) => (
           <button
-            key={t.id}
+            key={tabItem.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tabItem.id)}
             className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              tab === t.id
+              tab === tabItem.id
                 ? "bg-accent text-black"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -109,7 +110,7 @@ export function ProgramPageClient() {
         {tab === "meals" && (
           <div>
             <h2 className="text-lg font-medium text-white mb-4">
-              This week&apos;s meal plan
+              {t("thisWeekMealPlan")}
             </h2>
             <MealPlanTab
               program={data.program}
@@ -121,7 +122,9 @@ export function ProgramPageClient() {
         )}
         {tab === "fitness" && (
           <div>
-            <h2 className="text-lg font-medium text-white mb-4">Fitness plan</h2>
+            <h2 className="text-lg font-medium text-white mb-4">
+              {t("fitnessPlan")}
+            </h2>
             <FitnessTab
               program={data.program}
               onProgramUpdate={(program) =>
@@ -133,7 +136,7 @@ export function ProgramPageClient() {
         {tab === "fasting" && (
           <div>
             <h2 className="text-lg font-medium text-white mb-4">
-              Fasting &amp; rules
+              {t("fastingRulesTitle")}
             </h2>
             <FastingTab
               program={data.program}
@@ -145,7 +148,7 @@ export function ProgramPageClient() {
         {tab === "overview" && (
           <div>
             <h2 className="text-lg font-medium text-white mb-4">
-              {programWeeks}-week overview
+              {t("weeksOverview", { weeks: programWeeks })}
             </h2>
             <OverviewTab
               program={data.program}

@@ -9,6 +9,7 @@ import {
 } from "@/lib/program/prompts";
 import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function POST(request: Request) {
   const { user, supabase, premiumError } = await requirePremium();
@@ -50,8 +51,12 @@ export async function POST(request: Request) {
   });
 
   try {
+    const locale = await getRequestLocale(user!.id);
     const result = await generateGeminiJson<MealPlanAdjustResult>(
-      buildMealPlanAdjustPrompt(full, text)
+      buildMealPlanAdjustPrompt(full, text),
+      undefined,
+      undefined,
+      locale
     );
 
     const { data: onboardingData } = await supabase

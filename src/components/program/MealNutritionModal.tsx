@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { MealRecipe } from "@/types/program";
 
 export function MealNutritionModal({
@@ -9,6 +10,9 @@ export function MealNutritionModal({
   recipe: MealRecipe | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("program");
+  const tCommon = useTranslations("common");
+
   if (!recipe) return null;
 
   return (
@@ -16,24 +20,39 @@ export function MealNutritionModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/70"
-        aria-label="Close"
+        aria-label={tCommon("close")}
         onClick={onClose}
       />
       <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-card p-6">
         <h2 className="text-xl font-semibold text-white">{recipe.meal_name}</h2>
         <dl className="mt-5 grid grid-cols-2 gap-4">
-          <Nutrient label="Calories" value={`${recipe.calories_per_serving} kcal`} />
-          <Nutrient label="Protein" value={`${recipe.protein_per_serving} g`} />
-          <Nutrient label="Carbs" value={`${recipe.carbs_per_serving} g`} />
-          <Nutrient label="Fat" value={`${recipe.fat_per_serving} g`} />
-          <Nutrient label="Fiber" value={`${recipe.fiber_per_serving} g`} />
+          <Nutrient
+            label={t("calories")}
+            value={`${recipe.calories_per_serving} ${tCommon("kcal")}`}
+          />
+          <Nutrient
+            label={t("protein")}
+            value={`${recipe.protein_per_serving} ${tCommon("g")}`}
+          />
+          <Nutrient
+            label={t("carbs")}
+            value={`${recipe.carbs_per_serving} ${tCommon("g")}`}
+          />
+          <Nutrient
+            label={t("fat")}
+            value={`${recipe.fat_per_serving} ${tCommon("g")}`}
+          />
+          <Nutrient
+            label={t("fiber")}
+            value={`${recipe.fiber_per_serving} ${tCommon("g")}`}
+          />
         </dl>
         <button
           type="button"
           onClick={onClose}
           className="mt-6 w-full rounded-lg bg-accent py-2.5 text-sm font-medium text-black"
         >
-          Close
+          {tCommon("close")}
         </button>
       </div>
     </div>

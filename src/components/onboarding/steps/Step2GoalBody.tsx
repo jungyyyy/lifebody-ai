@@ -1,4 +1,13 @@
-import { GOAL_BODY_OPTIONS, type GoalBodyType, type OnboardingFormData } from "@/types/onboarding";
+"use client";
+
+import { useTranslations } from "next-intl";
+import {
+  GOAL_BODY_EMOJI,
+  GOAL_BODY_IDS,
+  goalBodyDescTranslationKey,
+  goalBodyTranslationKey,
+} from "@/lib/i18n/goalBodyOptions";
+import type { GoalBodyType, OnboardingFormData } from "@/types/onboarding";
 
 export function Step2GoalBody({
   data,
@@ -7,16 +16,18 @@ export function Step2GoalBody({
   data: OnboardingFormData;
   setData: React.Dispatch<React.SetStateAction<OnboardingFormData>>;
 }) {
+  const t = useTranslations("onboarding");
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {GOAL_BODY_OPTIONS.map((option) => {
-        const selected = data.goalBodyType === option.id;
+      {GOAL_BODY_IDS.map((id) => {
+        const selected = data.goalBodyType === id;
         return (
           <button
-            key={option.id}
+            key={id}
             type="button"
             onClick={() =>
-              setData((d) => ({ ...d, goalBodyType: option.id as GoalBodyType }))
+              setData((d) => ({ ...d, goalBodyType: id as GoalBodyType }))
             }
             className={`rounded-xl border p-4 text-left transition-all ${
               selected
@@ -25,11 +36,13 @@ export function Step2GoalBody({
             }`}
           >
             <span className="text-2xl" aria-hidden>
-              {option.emoji}
+              {GOAL_BODY_EMOJI[id]}
             </span>
-            <p className="mt-2 font-medium text-white">{option.title}</p>
+            <p className="mt-2 font-medium text-white">
+              {t(goalBodyTranslationKey(id))}
+            </p>
             <p className="mt-1 text-xs text-gray-400 leading-relaxed">
-              {option.description}
+              {t(goalBodyDescTranslationKey(id))}
             </p>
           </button>
         );

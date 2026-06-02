@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MealNutritionModal } from "@/components/program/MealNutritionModal";
 import type { FullProgram, MealRecipe, MealSlot } from "@/types/program";
 import {
@@ -30,15 +31,25 @@ const TABLE_SLOTS: MealSlot[] = ["breakfast", "lunch", "dinner", "snack"];
 function PrepSessionCard({
   title,
   session,
+  prepOnLabel,
+  cookLabel,
+  portionsLabel,
+  portionsUnit,
 }: {
   title: string;
   session: MealPrepSession;
+  prepOnLabel: string;
+  cookLabel: string;
+  portionsLabel: string;
+  portionsUnit: (count: number) => string;
 }) {
   return (
     <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
       <p className="text-sm font-medium text-amber-200">{title}</p>
-      <p className="text-xs text-gray-400 mt-1">Prep on: {session.prep_day}</p>
-      <p className="text-sm text-white mt-3">Cook:</p>
+      <p className="text-xs text-gray-400 mt-1">
+        {prepOnLabel} {session.prep_day}
+      </p>
+      <p className="text-sm text-white mt-3">{cookLabel}</p>
       <ul className="mt-1 space-y-0.5">
         {session.dishes_to_prep.map((d) => (
           <li key={d} className="text-sm text-gray-300">
@@ -46,11 +57,12 @@ function PrepSessionCard({
           </li>
         ))}
       </ul>
-      <p className="text-sm text-white mt-3">Portions to make:</p>
+      <p className="text-sm text-white mt-3">{portionsLabel}</p>
       <ul className="mt-1 space-y-0.5">
         {Object.entries(session.portions_to_make).map(([dish, count]) => (
           <li key={dish} className="text-sm text-gray-300 tabular-nums">
-            {dish} — <span className="text-accent">{count} portions</span>
+            {dish} —{" "}
+            <span className="text-accent">{portionsUnit(count as number)}</span>
           </li>
         ))}
       </ul>
@@ -76,6 +88,8 @@ export function MealPlanTab({
   const [adjustText, setAdjustText] = useState("");
   const [adjustLoading, setAdjustLoading] = useState(false);
   const [adjustMsg, setAdjustMsg] = useState<string | null>(null);
+  const t = useTranslations("program");
+  const tCommon = useTranslations("common");
 
   const mealPlan = program.meal_plan;
 
@@ -90,14 +104,14 @@ export function MealPlanTab({
         body: JSON.stringify({ part: "meal" }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to load meal plan");
+      if (!res.ok) throw new Error(json.error ?? t("mealLoadFailed"));
       onProgramUpdate(json.program);
     } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Failed to load meal plan");
+      setLoadError(e instanceof Error ? e.message : t("mealLoadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [mealPlan, onProgramUpdate]);
+  }, [mealPlan, onProgramUpdate, t]);
 
   useEffect(() => {
     if (!hasValidMealPlan(mealPlan)) {
@@ -131,7 +145,7 @@ export function MealPlanTab({
     const json = await res.json();
     setAdjustLoading(false);
     if (!res.ok) {
-      setAdjustMsg(json.error ?? "Update failed");
+      setAdjustMsg(json.error ?? t("updateFailed"));
       return;
     }
     onProgramUpdate(json.program);
@@ -156,10 +170,8 @@ export function MealPlanTab({
   if (loading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-400 animate-pulse">
-          Building your meal prep plan…
-        </p>
-        <p className="text-xs text-gray-500 mt-2">2 sets · max 4 recipes</p>
+        <p className="text-gray-400 animate-pulse">{t("buildingMealPlan")}</p>
+        <p className="text-xs text-gray-500 mt-2">{t("mealPlanMeta")}</p>
       </div>
     );
   }
@@ -173,7 +185,7 @@ export function MealPlanTab({
           onClick={ensureMealPlan}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black"
         >
-          Retry
+          {tCommon("retry")}
         </button>
       </div>
     );
@@ -183,13 +195,10 @@ export function MealPlanTab({
 
   return (
     <div className="space-y-8">
-      <p className="text-sm text-gray-400 leading-relaxed">
-        Same meals repeat Mon–Wed (Set A) and Thu–Sun (Set B). You only meal prep
-        twice a week.
-      </p>
+      <p className="text-sm text-gray-400 leading-relaxed">{t("mealPlanIntro")}</p>
 
       <section>
-        <h3 className="text-sm font-medium text-white mb-3">Weekly meals</h3>
+        <h3 className="text-sm font-medium text-white mb-3">{t("weeklyMeals")}</h3>
         <div className="overflow-x-auto -mx-1 px-1 pb-2">
           <div className="min-w-[640px]">
             <div className="grid grid-cols-8 gap-1.5 text-xs">
@@ -237,25 +246,34 @@ export function MealPlanTab({
             </div>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Mon–Wed share Set A · Thu–Sun share Set B · Snacks are flexible (~200
-          kcal)
-        </p>
+        <p className="text-xs text-gray-500 mt-2">{t("mealPlanFootnote")}</p>
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-white mb-3">
-          Your Meal Prep Plan 🍳
-        </h3>
+        <h3 className="text-sm font-medium text-white mb-3">{t("mealPrepPlan")}</h3>
         <div className="grid sm:grid-cols-2 gap-3">
-          <PrepSessionCard title="Prep session 1" session={session_1} />
-          <PrepSessionCard title="Prep session 2" session={session_2} />
+          <PrepSessionCard
+            title={t("prepSession1")}
+            session={session_1}
+            prepOnLabel={t("prepOn")}
+            cookLabel={t("cook")}
+            portionsLabel={t("portionsToMake")}
+            portionsUnit={(count) => t("portionsUnit", { count })}
+          />
+          <PrepSessionCard
+            title={t("prepSession2")}
+            session={session_2}
+            prepOnLabel={t("prepOn")}
+            cookLabel={t("cook")}
+            portionsLabel={t("portionsToMake")}
+            portionsUnit={(count) => t("portionsUnit", { count })}
+          />
         </div>
       </section>
 
       <section>
         <h3 className="text-sm font-medium text-white mb-3">
-          Recipes ({recipes.length})
+          {t("recipesCount", { count: recipes.length })}
         </h3>
         <div className="space-y-2">
           {recipes.map((recipe) => {
@@ -278,22 +296,20 @@ export function MealPlanTab({
                     {recipe.meal_name}
                   </span>
                   <span className="text-xs text-gray-500 shrink-0">
-                    × {totalPortions} this week
+                    {t("portionsThisWeek", { count: totalPortions })}
                   </span>
                 </button>
                 {isOpen && (
                   <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-4">
                     <p className="text-sm text-gray-400">
-                      This recipe makes{" "}
-                      <span className="text-white font-medium">
-                        {totalPortions} portion
-                        {totalPortions > 1 ? "s" : ""}
-                      </span>{" "}
-                      for your meal prep batches this week.
+                      {t("recipeMakes", {
+                        count: totalPortions,
+                        plural: totalPortions > 1 ? "s" : "",
+                      })}
                     </p>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase mb-2">
-                        Ingredients (batch total)
+                        {t("ingredientsBatch")}
                       </p>
                       <ul className="space-y-1">
                         {scaled.map((ing, i) => (
@@ -305,7 +321,7 @@ export function MealPlanTab({
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase mb-2">
-                        Instructions
+                        {t("instructions")}
                       </p>
                       <ol className="list-decimal list-inside space-y-2">
                         {recipe.steps.map((step, i) => (
@@ -323,7 +339,7 @@ export function MealPlanTab({
                       onClick={() => setSelectedRecipe(recipe)}
                       className="text-xs text-accent hover:underline"
                     >
-                      View nutrition per serving →
+                      {t("viewNutrition")}
                     </button>
                   </div>
                 )}
@@ -335,13 +351,13 @@ export function MealPlanTab({
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <h3 className="text-sm font-medium text-white">Grocery list</h3>
+          <h3 className="text-sm font-medium text-white">{t("groceryList")}</h3>
           <button
             type="button"
             onClick={copyGroceryList}
             className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 hover:border-accent/40 hover:text-white"
           >
-            {copied ? "Copied!" : "Copy grocery list"}
+            {copied ? t("copied") : t("copyGrocery")}
           </button>
         </div>
         <div className="space-y-4">
@@ -376,7 +392,7 @@ export function MealPlanTab({
             onClick={() => setAdjustOpen(true)}
             className="w-full rounded-lg border border-dashed border-white/20 py-3 text-sm text-gray-300 hover:border-accent/40 hover:text-white transition-colors"
           >
-            Something changed? Let me know
+            {t("somethingChanged")}
           </button>
         ) : (
           <form onSubmit={submitAdjust} className="space-y-3">
@@ -385,7 +401,7 @@ export function MealPlanTab({
               onChange={(e) => setAdjustText(e.target.value)}
               rows={2}
               className="w-full rounded-lg border border-white/10 bg-background px-4 py-2.5 text-sm text-white resize-none"
-              placeholder="I'm going out for dinner on Thursday…"
+              placeholder={t("adjustExample")}
             />
             <div className="flex gap-2">
               <button
@@ -393,14 +409,14 @@ export function MealPlanTab({
                 disabled={adjustLoading}
                 className="flex-1 rounded-lg bg-accent py-2.5 text-sm font-medium text-black disabled:opacity-50"
               >
-                {adjustLoading ? "Updating…" : "Update my week"}
+                {adjustLoading ? t("updating") : t("updateWeek")}
               </button>
               <button
                 type="button"
                 onClick={() => setAdjustOpen(false)}
                 className="rounded-lg border border-white/10 px-4 py-2.5 text-sm text-gray-400"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
             </div>
           </form>

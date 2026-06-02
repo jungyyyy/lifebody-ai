@@ -1,23 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import type { AccessState } from "@/lib/premium";
 import { useAccess } from "@/components/premium/AccessContext";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊", locked: false },
-  { href: "/journal", label: "Journal", icon: "💬", locked: true },
-  { href: "/program", label: "My Program", icon: "📅", locked: true },
-  { href: "/progress", label: "Progress", icon: "📈", locked: true },
-  { href: "/settings", label: "Settings", icon: "⚙️", locked: false },
-];
+function useNavItems() {
+  const t = useTranslations("nav");
+  return [
+    { href: "/dashboard", label: t("dashboard"), icon: "📊", locked: false },
+    { href: "/journal", label: t("journal"), icon: "💬", locked: true },
+    { href: "/program", label: t("program"), icon: "📅", locked: true },
+    { href: "/progress", label: t("progress"), icon: "📈", locked: true },
+    { href: "/settings", label: t("settings"), icon: "⚙️", locked: false },
+  ] as const;
+}
+
+type NavItem = ReturnType<typeof useNavItems>[number];
 
 function NavLink({
   item,
   active,
 }: {
-  item: (typeof NAV)[0];
+  item: NavItem;
   active: boolean;
 }) {
   const { isTabLocked, openUnlockModal, accessState } = useAccess();
@@ -62,9 +69,11 @@ function NavLink({
 function MobileNavLink({
   item,
   active,
+  shortLabel,
 }: {
-  item: (typeof NAV)[0];
+  item: NavItem;
   active: boolean;
+  shortLabel: string;
 }) {
   const { isTabLocked, openUnlockModal, accessState } = useAccess();
   const locked = item.locked && isTabLocked(item.href);
@@ -87,7 +96,7 @@ function MobileNavLink({
         <span className="text-lg" aria-hidden>
           {item.icon}
         </span>
-        <span>{item.label.split(" ")[0]}</span>
+        <span>{shortLabel}</span>
       </button>
     );
   }
@@ -97,7 +106,7 @@ function MobileNavLink({
       <span className="text-lg" aria-hidden>
         {item.icon}
       </span>
-      <span>{item.label.split(" ")[0]}</span>
+      <span>{shortLabel}</span>
     </Link>
   );
 }
@@ -112,16 +121,30 @@ export function AppShell({
   accessState: AccessState;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("common");
+  const tNav = useTranslations("nav");
+  const NAV = useNavItems();
+
+  const mobileShort: Record<string, string> = {
+    "/dashboard": tNav("dashboard"),
+    "/journal": tNav("journal"),
+    "/program": tNav("programShort"),
+    "/progress": tNav("progress"),
+    "/settings": tNav("settings"),
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
       <aside className="hidden md:flex w-56 flex-col border-r border-white/10 bg-card shrink-0">
         <div className="p-5 border-b border-white/10">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white">
-            <span aria-hidden>🌿</span>
-            <span>LifeBody AI</span>
-          </Link>
-          <p className="mt-2 text-xs text-gray-500 truncate">Hi, {nickname}</p>
+          <div className="flex items-start justify-between gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white">
+              <span aria-hidden>🌿</span>
+              <span>{t("appName")}</span>
+            </Link>
+            <LanguageSwitcher />
+          </div>
+          <p className="mt-2 text-xs text-gray-500 truncate">{t("hi", { name: nickname })}</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {NAV.map((item) => (
@@ -135,12 +158,15 @@ export function AppShell({
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-0">
-        <header className="md:hidden border-b border-white/10 bg-card px-4 py-3 flex items-center justify-between">
+        <header className="md:hidden border-b border-white/10 bg-card px-4 py-3 flex items-center justify-between gap-2">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white text-sm">
             <span aria-hidden>🌿</span>
-            LifeBody AI
+            {t("appName")}
           </Link>
-          <span className="text-xs text-gray-500">Hi, {nickname}</span>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <span className="text-xs text-gray-500">{t("hi", { name: nickname })}</span>
+          </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
@@ -152,6 +178,7 @@ export function AppShell({
               key={item.href}
               item={item}
               active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+              shortLabel={mobileShort[item.href] ?? item.label.split(" ")[0]}
             />
           ))}
         </div>

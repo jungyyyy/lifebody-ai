@@ -5,6 +5,7 @@ import { canShowWeeklyAssessmentCta } from "@/lib/assessment/visibility";
 import { programWeekNumber } from "@/lib/program/dates";
 import { getProgramLengthWeeks } from "@/lib/program/profile";
 import { localDateString } from "@/lib/dates";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function POST(request: Request) {
   const { user, supabase, premiumError } = await requirePremium();
@@ -42,9 +43,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const locale = await getRequestLocale(user!.id);
     const saved = await generateWeeklyAssessment(supabase, user!.id, {
       periodEnd: body.periodEnd ?? localDateString(),
       weekNumber,
+      locale,
     });
 
     return NextResponse.json({

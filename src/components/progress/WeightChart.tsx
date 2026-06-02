@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   CartesianGrid,
   Line,
@@ -25,7 +26,7 @@ export function WeightChart({
   weekTrend,
   periodEnd,
   dayCount = 14,
-  title = "Weight trend",
+  title,
   showSummary = true,
 }: {
   points: WeightPoint[];
@@ -38,6 +39,10 @@ export function WeightChart({
   title?: string;
   showSummary?: boolean;
 }) {
+  const t = useTranslations("progress");
+  const tCommon = useTranslations("common");
+  const chartTitle = title ?? t("weightTrend");
+
   const chartData = useMemo(() => {
     const end = periodEnd ?? localDateString();
     const byDate = new Map(points.map((p) => [p.date, p.weight]));
@@ -58,19 +63,19 @@ export function WeightChart({
 
   const changeLabel =
     totalChange === 0
-      ? "no change"
-      : `${totalChange > 0 ? "+" : ""}${totalChange}kg`;
+      ? t("noChange")
+      : `${totalChange > 0 ? "+" : ""}${totalChange}${tCommon("kg")}`;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-card p-5 sm:p-6">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-        {title}
+        {chartTitle}
       </h2>
 
       <div className="mt-4 h-56 w-full">
         {!hasAnyLog ? (
           <p className="text-sm text-gray-500 h-full flex items-center justify-center">
-            Log your weight to see your trend
+            {t("chartNoLog")}
           </p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -88,7 +93,7 @@ export function WeightChart({
                 tick={{ fill: "#9ca3af", fontSize: 11 }}
                 axisLine={{ stroke: "#ffffff20" }}
                 tickLine={false}
-                unit=" kg"
+                unit={` ${tCommon("kg")}`}
               />
               <Tooltip
                 contentStyle={{
@@ -98,7 +103,9 @@ export function WeightChart({
                 }}
                 labelStyle={{ color: "#9ca3af" }}
                 formatter={(value) =>
-                  value != null ? [`${value} kg`, "Weight"] : ["—", "Weight"]
+                  value != null
+                    ? [`${value} ${tCommon("kg")}`, t("chartWeight")]
+                    : ["—", t("chartWeight")]
                 }
               />
               <Line
@@ -118,22 +125,26 @@ export function WeightChart({
       {showSummary && (
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-gray-500 text-xs">Starting</p>
-            <p className="text-white font-medium mt-0.5">{startWeight} kg</p>
+            <p className="text-gray-500 text-xs">{t("starting")}</p>
+            <p className="text-white font-medium mt-0.5">
+              {startWeight} {tCommon("kg")}
+            </p>
           </div>
           <div>
-            <p className="text-gray-500 text-xs">Current</p>
-            <p className="text-accent font-medium mt-0.5">{currentWeight} kg</p>
+            <p className="text-gray-500 text-xs">{t("current")}</p>
+            <p className="text-accent font-medium mt-0.5">
+              {currentWeight} {tCommon("kg")}
+            </p>
           </div>
           <div>
-            <p className="text-gray-500 text-xs">Change</p>
+            <p className="text-gray-500 text-xs">{t("change")}</p>
             <p className="text-white font-medium mt-0.5">{changeLabel}</p>
           </div>
           <div>
-            <p className="text-gray-500 text-xs">This week</p>
+            <p className="text-gray-500 text-xs">{t("thisWeekStat")}</p>
             <p className="text-white font-medium mt-0.5">
               {weekTrend != null
-                ? `${weekTrend > 0 ? "+" : ""}${weekTrend}kg`
+                ? `${weekTrend > 0 ? "+" : ""}${weekTrend}${tCommon("kg")}`
                 : "—"}
             </p>
           </div>

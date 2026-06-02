@@ -1,15 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { SUBSCRIPTION_PRICE_LABEL } from "@/lib/billing/constants";
 
 type UnlockVariant = "never_trial" | "trial_expired";
 
-/**
- * SANDBOX TESTING:
- * Card 4242 4242 4242 4242 | any future expiry | any CVC | any ZIP
- */
 export function UnlockModal({
   open,
   variant,
@@ -19,6 +16,9 @@ export function UnlockModal({
   variant: UnlockVariant;
   onClose: () => void;
 }) {
+  const t = useTranslations("premium");
+  const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
   const [loading, setLoading] = useState<"trial" | "paid" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +57,7 @@ export function UnlockModal({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
+      if (!user) throw new Error(tErrors("notSignedIn"));
 
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
@@ -69,14 +69,14 @@ export function UnlockModal({
         }),
       });
       const json = await safeJson<{ url?: string; error?: string }>(res);
-      if (!res.ok) throw new Error(json?.error ?? "Could not start checkout");
+      if (!res.ok) throw new Error(json?.error ?? t("couldNotCheckout"));
       if (json?.url) {
         window.location.href = json.url;
         return;
       }
-      throw new Error("No checkout URL returned");
+      throw new Error(tErrors("noCheckoutUrl"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : tCommon("somethingWrong"));
       setLoading(null);
     }
   }
@@ -90,7 +90,7 @@ export function UnlockModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-        aria-label="Close"
+        aria-label={tCommon("close")}
         onClick={onClose}
       />
       <div
@@ -100,12 +100,10 @@ export function UnlockModal({
         className="relative w-full max-w-md rounded-2xl border border-white/10 bg-card p-6 shadow-2xl"
       >
         <h2 id="unlock-title" className="text-xl font-semibold text-white text-center">
-          {isNew ? "Unlock LifeBody AI" : "Your Free Trial Has Ended"}
+          {isNew ? t("unlockTitle") : t("trialEndedTitle")}
         </h2>
         <p className="mt-2 text-sm text-gray-400 text-center leading-relaxed">
-          {isNew
-            ? "Try everything free for 3 days — add a card to start your trial. You won't be charged until day 4."
-            : "Subscribe to keep your personalized program and all your data."}
+          {isNew ? t("trialNewDesc") : t("trialEndedDesc")}
         </p>
 
         {error && (
@@ -123,7 +121,7 @@ export function UnlockModal({
                 onClick={() => startCheckout(true)}
                 className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-medium text-background hover:bg-accent/90 disabled:opacity-50"
               >
-                {loading === "trial" ? "Redirecting…" : "Start Free Trial →"}
+                {loading === "trial" ? t("redirecting") : t("startTrial")}
               </button>
               <button
                 type="button"
@@ -132,8 +130,8 @@ export function UnlockModal({
                 className="w-full rounded-lg border border-white/10 px-4 py-3 text-sm text-white hover:border-white/20 disabled:opacity-50"
               >
                 {loading === "paid"
-                  ? "Redirecting…"
-                  : `Add payment method (${SUBSCRIPTION_PRICE_LABEL})`}
+                  ? t("redirecting")
+                  : t("addPayment", { price: SUBSCRIPTION_PRICE_LABEL })}
               </button>
             </>
           ) : (
@@ -145,8 +143,8 @@ export function UnlockModal({
                 className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-medium text-background hover:bg-accent/90 disabled:opacity-50"
               >
                 {loading === "paid"
-                  ? "Redirecting…"
-                  : `Subscribe for ${SUBSCRIPTION_PRICE_LABEL} →`}
+                  ? t("redirecting")
+                  : t("subscribe", { price: SUBSCRIPTION_PRICE_LABEL })}
               </button>
               <button
                 type="button"
@@ -154,7 +152,7 @@ export function UnlockModal({
                 onClick={onClose}
                 className="w-full rounded-lg border border-white/10 px-4 py-3 text-sm text-gray-400 hover:text-white disabled:opacity-50"
               >
-                Maybe later
+                {t("maybeLater")}
               </button>
             </>
           )}
@@ -162,8 +160,8 @@ export function UnlockModal({
 
         <p className="mt-4 text-center text-xs text-gray-500 leading-relaxed">
           {isNew
-            ? `3 days free, then ${SUBSCRIPTION_PRICE_LABEL}. Cancel anytime.`
-            : "Your data and program are saved. Subscribe anytime to pick up where you left off."}
+            ? t("trialThenPrice", { price: SUBSCRIPTION_PRICE_LABEL })
+            : t("dataSaved")}
         </p>
       </div>
     </div>

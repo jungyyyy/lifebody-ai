@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("onboarding_completed")
+          .select("onboarding_completed, preferred_language")
           .eq("id", user.id)
           .single();
 
@@ -26,7 +26,16 @@ export async function GET(request: Request) {
           ? "/dashboard"
           : "/onboarding";
 
-        return NextResponse.redirect(`${origin}${redirectPath}`);
+        const response = NextResponse.redirect(`${origin}${redirectPath}`);
+        const lang = profile?.preferred_language;
+        if (lang === "de" || lang === "ko" || lang === "en") {
+          response.cookies.set("NEXT_LOCALE", lang, {
+            path: "/",
+            maxAge: 60 * 60 * 24 * 365,
+            sameSite: "lax",
+          });
+        }
+        return response;
       }
 
       return NextResponse.redirect(`${origin}${next}`);

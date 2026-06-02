@@ -6,6 +6,7 @@ import { buildJournalPrompt } from "@/lib/journal/prompts";
 import type { GeneratedProgram } from "@/types/onboarding";
 import type { JournalAiResponse } from "@/types/journal";
 import { localDateString } from "@/lib/dates";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function POST(request: Request) {
   const { user, supabase, premiumError } = await requirePremium();
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
   );
 
   try {
+    const locale = await getRequestLocale(user!.id);
     const aiResponse = await generateGeminiJson<JournalAiResponse>(
       buildJournalPrompt({
         message,
@@ -59,7 +61,10 @@ export async function POST(request: Request) {
         todayLogs,
         todayTotals,
         nickname: profileRes.data?.nickname?.trim() || "friend",
-      })
+      }),
+      undefined,
+      undefined,
+      locale
     );
 
     if (aiResponse.action === "log_food") {

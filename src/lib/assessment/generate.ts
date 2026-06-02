@@ -5,6 +5,7 @@ import { fetchAssessmentHistory } from "@/lib/assessment/historyData";
 import { buildWeeklyAssessmentPrompt } from "@/lib/assessment/prompts";
 import { lastSevenDaysRange } from "@/lib/assessment/weekData";
 import type { WeeklyAssessmentData } from "@/types/assessment";
+import type { Locale } from "@/i18n/routing";
 
 const ASSESSMENT_MODEL = "gemini-2.5-flash";
 
@@ -32,7 +33,7 @@ function normalizeAssessment(raw: WeeklyAssessmentData): WeeklyAssessmentData {
 export async function generateWeeklyAssessment(
   supabase: SupabaseClient,
   userId: string,
-  options?: { periodEnd?: string; weekNumber?: number }
+  options?: { periodEnd?: string; weekNumber?: number; locale?: Locale }
 ) {
   const { periodStart, periodEnd } = lastSevenDaysRange(options?.periodEnd);
   const history = await fetchAssessmentHistory(
@@ -49,7 +50,8 @@ export async function generateWeeklyAssessment(
     await generateGeminiJson<WeeklyAssessmentData>(
       buildWeeklyAssessmentPrompt(history),
       "You are an evidence-based health coach. Only report patterns supported by the user's log data. Output valid JSON only.",
-      ASSESSMENT_MODEL
+      ASSESSMENT_MODEL,
+      options?.locale ?? "en"
     )
   );
 
@@ -91,7 +93,12 @@ export async function generateWeeklyAssessment(
   if (error) throw new Error(error.message);
 
   try {
-    await applyAssessmentProgramUpdates(supabase, userId, assessment);
+    await applyAssessmentProgramUpdates(
+      supabase,
+      userId,
+      assessment,
+      options?.locale ?? "en"
+    );
   } catch (err) {
     console.error("Program update after assessment failed:", err);
   }

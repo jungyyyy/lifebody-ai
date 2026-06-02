@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api/auth";
 import { generateGeminiJson } from "@/lib/gemini";
+import { getRequestLocale } from "@/lib/i18n/server";
 import { buildAssessmentPrompt } from "@/lib/onboarding/prompts";
 import { upsertOnboardingData } from "@/lib/onboarding/db";
 import type { BodyAssessment, OnboardingFormData } from "@/types/onboarding";
@@ -12,8 +13,12 @@ export async function POST(request: Request) {
   const body = (await request.json()) as OnboardingFormData;
 
   try {
+    const locale = await getRequestLocale(user!.id);
     const assessment = await generateGeminiJson<BodyAssessment>(
-      buildAssessmentPrompt(body)
+      buildAssessmentPrompt(body),
+      undefined,
+      undefined,
+      locale
     );
 
     const dataWithAssessment: OnboardingFormData = {

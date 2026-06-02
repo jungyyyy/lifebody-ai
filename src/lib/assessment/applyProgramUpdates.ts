@@ -9,6 +9,7 @@ import {
 import type { WeeklyAssessmentData } from "@/types/assessment";
 import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram, FullProgram } from "@/types/program";
+import type { Locale } from "@/i18n/routing";
 
 const ASSESSMENT_MODEL = "gemini-2.5-flash";
 
@@ -29,7 +30,8 @@ function uniqueStrings(items: string[]): string[] {
 export async function applyAssessmentProgramUpdates(
   supabase: SupabaseClient,
   userId: string,
-  assessment: WeeklyAssessmentData
+  assessment: WeeklyAssessmentData,
+  locale: Locale = "en"
 ): Promise<FullProgram | null> {
   const updates = assessment.program_updates;
   const rules = uniqueStrings([
@@ -119,7 +121,8 @@ export async function applyAssessmentProgramUpdates(
     const result = await generateGeminiJson<MealPlanAdjustResult>(
       buildMealPlanAdjustPrompt(full, context),
       undefined,
-      ASSESSMENT_MODEL
+      ASSESSMENT_MODEL,
+      locale
     );
     program = {
       ...program,

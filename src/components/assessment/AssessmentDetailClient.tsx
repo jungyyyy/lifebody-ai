@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { WeeklyAssessmentReport } from "@/components/assessment/WeeklyAssessmentReport";
 import type { WeeklyAssessmentData } from "@/types/assessment";
 
 export function AssessmentDetailClient({ id }: { id: string }) {
+  const t = useTranslations("progress");
   const [data, setData] = useState<{
     assessment: WeeklyAssessmentData;
     period_start: string;
@@ -22,16 +24,16 @@ export function AssessmentDetailClient({ id }: { id: string }) {
         setData(json);
       })
       .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load")
+        setError(e instanceof Error ? e.message : t("failedLoad"))
       );
-  }, [id]);
+  }, [id, t]);
 
   if (error) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <p className="text-red-400">{error}</p>
         <Link href="/progress" className="mt-4 inline-block text-accent text-sm">
-          ← Back to progress
+          {t("allAssessments")}
         </Link>
       </div>
     );
@@ -40,7 +42,7 @@ export function AssessmentDetailClient({ id }: { id: string }) {
   if (!data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <p className="text-gray-500 animate-pulse">Loading assessment…</p>
+        <p className="text-gray-500 animate-pulse">{t("loadingAssessment")}</p>
       </div>
     );
   }
@@ -51,7 +53,7 @@ export function AssessmentDetailClient({ id }: { id: string }) {
         href="/progress"
         className="text-sm text-accent hover:text-accent-hover mb-6 inline-block"
       >
-        ← All assessments
+        {t("allAssessments")}
       </Link>
       <WeeklyAssessmentReport
         assessment={data.assessment}

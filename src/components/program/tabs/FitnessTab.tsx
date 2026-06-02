@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { FullProgram } from "@/types/program";
 import { hasValidFitnessPlan } from "@/lib/program/validatePlans";
 
@@ -11,6 +12,8 @@ export function FitnessTab({
   program: FullProgram;
   onProgramUpdate: (p: FullProgram) => void;
 }) {
+  const t = useTranslations("program");
+  const tCommon = useTranslations("common");
   const [loading, setLoading] = useState(!hasValidFitnessPlan(program.fitness_plan));
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -25,16 +28,16 @@ export function FitnessTab({
         body: JSON.stringify({ part: "fitness" }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to load fitness plan");
+      if (!res.ok) throw new Error(json.error ?? t("fitnessLoadFailed"));
       onProgramUpdate(json.program);
     } catch (e) {
       setLoadError(
-        e instanceof Error ? e.message : "Failed to load fitness plan"
+        e instanceof Error ? e.message : t("fitnessLoadFailed")
       );
     } finally {
       setLoading(false);
     }
-  }, [program.fitness_plan, onProgramUpdate]);
+  }, [program.fitness_plan, onProgramUpdate, t]);
 
   useEffect(() => {
     if (!hasValidFitnessPlan(program.fitness_plan)) {
@@ -45,10 +48,8 @@ export function FitnessTab({
   if (loading) {
     return (
       <div className="py-12 text-center">
-        <p className="text-gray-400 animate-pulse">
-          Building your training plan…
-        </p>
-        <p className="text-xs text-gray-500 mt-2">This may take 30–60 seconds</p>
+        <p className="text-gray-400 animate-pulse">{t("buildingFitness")}</p>
+        <p className="text-xs text-gray-500 mt-2">{t("fitnessLoadTime")}</p>
       </div>
     );
   }
@@ -62,7 +63,7 @@ export function FitnessTab({
           onClick={ensureFitnessPlan}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black"
         >
-          Retry
+          {tCommon("retry")}
         </button>
       </div>
     );
@@ -76,7 +77,7 @@ export function FitnessTab({
         {program.exercise_plan.overview}
       </p>
       <p className="text-sm text-gray-500">
-        {plan.sessions_per_week} sessions per week
+        {t("sessionsPerWeek", { count: plan.sessions_per_week })}
       </p>
 
       {plan.sessions.map((session) => (
@@ -89,11 +90,11 @@ export function FitnessTab({
               {session.session_name}
             </h3>
             <p className="text-sm text-accent mt-0.5">
-              Focus: {session.focus}
+              {t("focus")} {session.focus}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {session.suggested_days} · ~{session.estimated_duration_minutes}{" "}
-              minutes
+              {session.suggested_days} ·{" "}
+              {t("minutesEst", { minutes: session.estimated_duration_minutes })}
             </p>
           </div>
 
@@ -111,11 +112,11 @@ export function FitnessTab({
                     </p>
                   </div>
                   <p className="text-sm text-accent tabular-nums shrink-0">
-                    {ex.sets} sets × {ex.reps} reps
+                    {t("setsReps", { sets: ex.sets, reps: ex.reps })}
                   </p>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Rest {ex.rest_seconds} seconds between sets
+                  {t("restBetween", { seconds: ex.rest_seconds })}
                 </p>
                 <p className="mt-2 text-sm text-gray-400 leading-relaxed">
                   {ex.coaching_tip}
@@ -125,8 +126,7 @@ export function FitnessTab({
           </div>
 
           <p className="mt-4 text-xs text-gray-500 border-t border-white/10 pt-4 leading-relaxed">
-            When this feels easy, add 2.5kg. Never increase weight until you can
-            complete all reps with perfect form.
+            {t("progressionTip")}
           </p>
         </div>
       ))}

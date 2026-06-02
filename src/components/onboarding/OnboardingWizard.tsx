@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { OnboardingLayout } from "./OnboardingLayout";
 import { ErrorBanner, PrimaryButton, StepTitle } from "./ui";
 import { Step1BasicStats } from "./steps/Step1BasicStats";
@@ -23,36 +24,11 @@ import {
   type OnboardingFormData,
 } from "@/types/onboarding";
 
-const STEP_TITLES: Record<number, { title: string; subtitle?: string }> = {
-  1: {
-    title: "Let's get started",
-    subtitle: "Tell us your name and basic stats so we can personalize your plan.",
-  },
-  2: {
-    title: "What's your goal body?",
-    subtitle: "Choose the physique you're working toward.",
-  },
-  3: {
-    title: "Describe your current body",
-    subtitle:
-      "Be as honest as you like — this is private and helps us build your plan.",
-  },
-  4: { title: "Your body assessment" },
-  5: {
-    title: "How fast do you want to reach your goal?",
-    subtitle:
-      "Slower is more sustainable. Faster requires more discipline. Either way, you will get there.",
-  },
-  6: {
-    title: "Your lifestyle",
-    subtitle: "This helps us build a program that fits your real life.",
-  },
-  7: { title: "Building your program" },
-  8: { title: "Unlock your program" },
-};
-
 export function OnboardingWizard() {
   const router = useRouter();
+  const t = useTranslations("onboarding");
+  const tVal = useTranslations("validation");
+  const tCommon = useTranslations("common");
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingFormData>(INITIAL_ONBOARDING_DATA);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +42,6 @@ export function OnboardingWizard() {
   >("idle");
   const [programError, setProgramError] = useState<string | null>(null);
   const programFetched = useRef(false);
-
 
   const programWeeks = useMemo(() => {
     if (!data.assessment) return 12;
@@ -88,19 +63,19 @@ export function OnboardingWizard() {
         body: JSON.stringify(data),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Assessment failed");
+      if (!res.ok) throw new Error(json.error ?? t("assessmentFailed"));
       setData((d) => ({
         ...d,
         assessment: json.assessment as BodyAssessment,
       }));
     } catch (err) {
       setAssessmentError(
-        err instanceof Error ? err.message : "Assessment failed"
+        err instanceof Error ? err.message : t("assessmentFailed")
       );
     } finally {
       setAssessmentLoading(false);
     }
-  }, [data]);
+  }, [data, t]);
 
   const fetchProgram = useCallback(async () => {
     setProgramPhase("loading");
@@ -116,15 +91,15 @@ export function OnboardingWizard() {
         minDelay,
       ]);
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Program generation failed");
+      if (!res.ok) throw new Error(json.error ?? t("programFailed"));
       setProgramPhase("done");
     } catch (err) {
       setProgramPhase("error");
       setProgramError(
-        err instanceof Error ? err.message : "Program generation failed"
+        err instanceof Error ? err.message : t("programFailed")
       );
     }
-  }, [data]);
+  }, [data, t]);
 
   useEffect(() => {
     if (step === 4 && !assessmentFetched.current && !data.assessment) {
@@ -141,9 +116,9 @@ export function OnboardingWizard() {
   }, [step, programPhase, fetchProgram]);
 
   function goNext() {
-    const validationError = validateStep(step, data);
-    if (validationError) {
-      setError(validationError);
+    const validationKey = validateStep(step, data);
+    if (validationKey) {
+      setError(tVal(validationKey));
       return;
     }
     setError(null);
@@ -155,7 +130,18 @@ export function OnboardingWizard() {
     setStep((s) => Math.max(1, s - 1));
   }
 
-  const meta = STEP_TITLES[step];
+  const stepMeta: Record<number, { title: string; subtitle?: string }> = {
+    1: { title: t("step1Title"), subtitle: t("step1Subtitle") },
+    2: { title: t("step2Title"), subtitle: t("step2Subtitle") },
+    3: { title: t("step3Title"), subtitle: t("step3Subtitle") },
+    4: { title: t("step4Title") },
+    5: { title: t("step5Title"), subtitle: t("step5Subtitle") },
+    6: { title: t("step6Title"), subtitle: t("step6Subtitle") },
+    7: { title: t("step7Title") },
+    8: { title: t("step8Title") },
+  };
+
+  const meta = stepMeta[step];
   const showNav = step <= 3 || step === 5 || step === 6;
 
   return (
@@ -190,10 +176,7 @@ export function OnboardingWizard() {
       {step === 8 && (
         <>
           {error && <ErrorBanner message={error} />}
-          <Step7Premium
-            programWeeks={programWeeks}
-            onboardingData={data}
-          />
+          <Step7Premium programWeeks={programWeeks} onboardingData={data} />
         </>
       )}
 
@@ -205,11 +188,11 @@ export function OnboardingWizard() {
               onClick={goBack}
               className="rounded-lg border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:text-white hover:border-white/20 transition-colors"
             >
-              Back
+              {tCommon("back")}
             </button>
           )}
           <div className={step > 1 ? "flex-1" : "w-full"}>
-            <PrimaryButton onClick={goNext}>Next →</PrimaryButton>
+            <PrimaryButton onClick={goNext}>{tCommon("next")}</PrimaryButton>
           </div>
         </div>
       )}
@@ -222,7 +205,7 @@ export function OnboardingWizard() {
               fetchAssessment();
             }}
           >
-            Retry analysis
+            {t("retryAnalysis")}
           </PrimaryButton>
         </div>
       )}
@@ -237,7 +220,7 @@ export function OnboardingWizard() {
               fetchProgram();
             }}
           >
-            Retry program generation
+            {t("retryProgram")}
           </PrimaryButton>
         </div>
       )}

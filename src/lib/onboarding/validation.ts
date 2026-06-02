@@ -1,59 +1,78 @@
 import type { OnboardingFormData } from "@/types/onboarding";
 
+export type ValidationKey =
+  | "nickname"
+  | "weight"
+  | "height"
+  | "age"
+  | "sex"
+  | "goalBody"
+  | "bodyDescription"
+  | "lossRate"
+  | "cuisines"
+  | "sweets"
+  | "sports"
+  | "exercise"
+  | "cook"
+  | "meals"
+  | "schedule"
+  | "snacks"
+  | "recentEating";
+
 export function validateStep(
   step: number,
   data: OnboardingFormData
-): string | null {
+): ValidationKey | null {
   switch (step) {
     case 1: {
       if (!data.nickname.trim() || data.nickname.trim().length < 2) {
-        return "What should we call you? (at least 2 characters)";
+        return "nickname";
       }
       const weight = parseFloat(data.currentWeightKg);
       const height = parseFloat(data.heightCm);
       const age = parseInt(data.age, 10);
       if (!weight || weight < 30 || weight > 300) {
-        return "Enter a valid weight (30–300 kg)";
+        return "weight";
       }
       if (!height || height < 100 || height > 250) {
-        return "Enter a valid height (100–250 cm)";
+        return "height";
       }
       if (!age || age < 13 || age > 120) {
-        return "Enter a valid age (13–120)";
+        return "age";
       }
-      if (!data.sex) return "Please select your sex";
+      if (!data.sex) return "sex";
       return null;
     }
     case 2:
-      if (!data.goalBodyType) return "Please select a goal body type";
+      if (!data.goalBodyType) return "goalBody";
       return null;
     case 3:
       if (data.currentBodyDescription.trim().length < 10) {
-        return "Please describe your current body (at least 10 characters)";
+        return "bodyDescription";
       }
       return null;
     case 5:
       if (!data.weeklyLossRateKg) {
-        return "Please choose how fast you want to reach your goal";
+        return "lossRate";
       }
       return null;
     case 6: {
-      if (!data.cuisines.trim()) return "Please tell us what cuisines you love";
-      if (!data.sweetsFrequency) return "Please select how often you eat sweets";
+      if (!data.cuisines.trim()) return "cuisines";
+      if (!data.sweetsFrequency) return "sweets";
       if (!data.sportsEnjoyed.trim()) {
-        return "Please share sports or movement you enjoy (or type None)";
+        return "sports";
       }
       if (!data.exerciseFrequency) {
-        return "Please select your current exercise frequency";
+        return "exercise";
       }
-      if (!data.cookFrequency) return "Please select how often you can cook";
-      if (!data.mealsPerDay) return "Please select meals per day";
+      if (!data.cookFrequency) return "cook";
+      if (!data.mealsPerDay) return "meals";
       if (!data.eatingSchedule.trim()) {
-        return "Please describe when you usually eat";
+        return "schedule";
       }
-      if (!data.snacks.trim()) return "Please describe your usual snacks";
+      if (!data.snacks.trim()) return "snacks";
       if (!data.recentEating.trim()) {
-        return "Please describe what you've been eating recently";
+        return "recentEating";
       }
       return null;
     }

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { LoadingDots, PrimaryButton } from "../ui";
 
 export function Step6ProgramGen({
@@ -11,16 +14,17 @@ export function Step6ProgramGen({
   error: string | null;
   onShowProgram: () => void;
 }) {
+  const t = useTranslations("onboarding");
+
   if (phase === "loading") {
     return (
       <div className="py-16 text-center">
         <LoadingDots />
         <p className="mt-6 text-lg font-medium text-white">
-          Hold on, I&apos;m building your {programWeeks}-week program...
+          {t("programBuilding", { weeks: programWeeks })}
         </p>
         <p className="mt-3 text-sm text-gray-400 max-w-sm mx-auto leading-relaxed">
-          I&apos;m analyzing your lifestyle, preferences, and goals to create
-          something made just for you.
+          {t("programBuildingDesc")}
         </p>
       </div>
     );
@@ -40,13 +44,9 @@ export function Step6ProgramGen({
         ✨
       </div>
       <p className="text-lg font-medium text-white leading-relaxed">
-        Done! I built your {programWeeks}-week program.
-        <br />
-        Are you ready to transform your lifestyle over {programWeeks} weeks?
+        {t("programDone", { weeks: programWeeks })}
       </p>
-      <PrimaryButton onClick={onShowProgram}>
-        Show me my program →
-      </PrimaryButton>
+      <PrimaryButton onClick={onShowProgram}>{t("showProgram")}</PrimaryButton>
     </div>
   );
 }

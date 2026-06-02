@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface AssessmentStatus {
   weekNumber: number;
@@ -11,6 +12,8 @@ interface AssessmentStatus {
 }
 
 export function WeeklyAssessmentCta({ className = "" }: { className?: string }) {
+  const t = useTranslations("premium");
+  const tAssessment = useTranslations("assessment");
   const [status, setStatus] = useState<AssessmentStatus | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -30,7 +33,7 @@ export function WeeklyAssessmentCta({ className = "" }: { className?: string }) 
         className={`block rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 transition-colors hover:bg-accent/15 ${className}`}
       >
         <p className="text-sm font-medium text-accent">
-          Your Week {status.weekNumber} assessment is ready →
+          {t("weekAssessmentReady", { week: status.weekNumber })}
         </p>
       </Link>
     );
@@ -41,7 +44,7 @@ export function WeeklyAssessmentCta({ className = "" }: { className?: string }) 
       className={`rounded-xl border border-white/10 bg-card px-4 py-3 flex flex-wrap items-center justify-between gap-3 ${className}`}
     >
       <p className="text-sm text-gray-300">
-        Your Week {status.weekNumber} weekly report is ready to create
+        {t("weekReportReady", { week: status.weekNumber })}
       </p>
       <button
         type="button"
@@ -70,7 +73,7 @@ export function WeeklyAssessmentCta({ className = "" }: { className?: string }) 
         }}
         className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
       >
-        {generating ? "Creating…" : "Create weekly report"}
+        {generating ? tAssessment("creating") : tAssessment("createWeeklyReport")}
       </button>
     </div>
   );

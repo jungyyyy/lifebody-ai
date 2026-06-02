@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
+  GOAL_BODY_IDS,
+  goalBodyTranslationKey,
+} from "@/lib/i18n/goalBodyOptions";
+import { cookOptionKey } from "@/lib/i18n/lifestyleOptions";
+import {
   COOK_OPTIONS,
-  GOAL_BODY_OPTIONS,
   type GoalBodyType,
   type Sex,
 } from "@/types/onboarding";
@@ -89,6 +94,11 @@ export function SettingsPage({
   email: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("settings");
+  const tOnboarding = useTranslations("onboarding");
+  const tCommon = useTranslations("common");
+  const tPremium = useTranslations("premium");
+  const tErrors = useTranslations("errors");
   const [toast, setToast] = useState<string | null>(null);
   const [premium, setPremium] = useState(initialPremium);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
@@ -157,7 +167,7 @@ export function SettingsPage({
     });
     setProfileSaving(false);
     if (res.ok) {
-      setToast("Profile updated ✅");
+      setToast(t("profileUpdated"));
       setTimeout(() => setToast(null), 4000);
       router.refresh();
     }
@@ -175,7 +185,7 @@ export function SettingsPage({
       upsert: true,
     });
     if (error) {
-      setToast(`Upload failed: ${error.message}`);
+      setToast(t("uploadFailed", { message: error.message }));
       return;
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -206,7 +216,7 @@ export function SettingsPage({
     setProgramSaving(false);
     setRegenConfirm(false);
     if (res.ok) {
-      setToast("Program settings saved ✅");
+      setToast(t("programSaved"));
       setTimeout(() => setToast(null), 4000);
       router.refresh();
     }
@@ -215,11 +225,11 @@ export function SettingsPage({
   async function updatePassword() {
     setPasswordError(null);
     if (newPassword !== confirmPassword) {
-      setPasswordError("New passwords do not match");
+      setPasswordError(t("passwordMismatch"));
       return;
     }
     if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
+      setPasswordError(t("passwordMin8"));
       return;
     }
 
@@ -230,7 +240,7 @@ export function SettingsPage({
       password: currentPassword,
     });
     if (signInError) {
-      setPasswordError("Current password is incorrect");
+      setPasswordError(t("passwordWrong"));
       setPasswordSaving(false);
       return;
     }
@@ -244,7 +254,7 @@ export function SettingsPage({
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setToast("Password updated ✅");
+    setToast(t("passwordUpdated"));
     setTimeout(() => setToast(null), 4000);
   }
 
@@ -258,15 +268,15 @@ export function SettingsPage({
       });
       const json = await safeJson<{ url?: string; error?: string }>(res);
       if (!res.ok) {
-        throw new Error(json?.error ?? "Could not start checkout");
+        throw new Error(json?.error ?? tPremium("couldNotCheckout"));
       }
       if (json?.url) {
         window.location.href = json.url;
         return;
       }
-      throw new Error("No checkout URL returned");
+      throw new Error(tErrors("noCheckoutUrl"));
     } catch (err) {
-      setToast(err instanceof Error ? err.message : "Could not start checkout");
+      setToast(err instanceof Error ? err.message : tPremium("couldNotCheckout"));
       setTimeout(() => setToast(null), 4000);
       setCheckoutLoading(false);
     }
@@ -278,15 +288,15 @@ export function SettingsPage({
       const res = await fetch("/api/stripe/create-portal", { method: "POST" });
       const json = await safeJson<{ url?: string; error?: string }>(res);
       if (!res.ok) {
-        throw new Error(json?.error ?? "Could not open portal");
+        throw new Error(json?.error ?? tPremium("couldNotPortal"));
       }
       if (json?.url) {
         window.location.href = json.url;
         return;
       }
-      throw new Error("No portal URL returned");
+      throw new Error(tErrors("noPortalUrl"));
     } catch (err) {
-      setToast(err instanceof Error ? err.message : "Could not open portal");
+      setToast(err instanceof Error ? err.message : tPremium("couldNotPortal"));
       setTimeout(() => setToast(null), 4000);
       setPortalLoading(false);
     }
@@ -302,7 +312,7 @@ export function SettingsPage({
       return;
     }
     setDeleteLoading(false);
-    setToast("Could not delete account");
+    setToast(t("deleteFailed"));
   }
 
   const inputClass =
@@ -311,15 +321,15 @@ export function SettingsPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 pb-24">
       <Toast message={toast} />
-      <h1 className="text-2xl font-semibold text-white">Settings</h1>
-      <p className="mt-1 text-sm text-gray-500">Manage your account and program</p>
+      <h1 className="text-2xl font-semibold text-white">{t("title")}</h1>
+      <p className="mt-1 text-sm text-gray-500">{t("subtitle")}</p>
 
       <div className="mt-8 space-y-6">
-        <Section title="Profile">
+        <Section title={t("profile")}>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-xs text-gray-500">First name</label>
+                <label className="text-xs text-gray-500">{t("firstName")}</label>
                 <input
                   className={`mt-1 ${inputClass}`}
                   value={firstName}
@@ -327,7 +337,7 @@ export function SettingsPage({
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500">Last name</label>
+                <label className="text-xs text-gray-500">{t("lastName")}</label>
                 <input
                   className={`mt-1 ${inputClass}`}
                   value={lastName}
@@ -336,7 +346,7 @@ export function SettingsPage({
               </div>
             </div>
             <div>
-              <label className="text-xs text-gray-500">Profile photo</label>
+              <label className="text-xs text-gray-500">{t("profilePhoto")}</label>
               <input
                 type="file"
                 accept="image/*"
@@ -349,7 +359,7 @@ export function SettingsPage({
               {avatarUrl && (
                 <Image
                   src={avatarUrl}
-                  alt="Profile photo"
+                  alt={t("profilePhoto")}
                   width={64}
                   height={64}
                   unoptimized
@@ -358,7 +368,7 @@ export function SettingsPage({
               )}
             </div>
             <div>
-              <label className="text-xs text-gray-500">Date of birth</label>
+              <label className="text-xs text-gray-500">{t("dateOfBirth")}</label>
               <input
                 type="date"
                 className={`mt-1 ${inputClass}`}
@@ -367,24 +377,24 @@ export function SettingsPage({
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Gender</label>
+              <label className="text-xs text-gray-500">{t("gender")}</label>
               <select
                 className={`mt-1 ${inputClass}`}
                 value={sex}
                 onChange={(e) => setSex(e.target.value as Sex)}
               >
                 <option value="">—</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="female">{tOnboarding("sexFemale")}</option>
+                <option value="male">{tOnboarding("sexMale")}</option>
+                <option value="prefer_not_to_say">
+                  {tOnboarding("sexPreferNot")}
+                </option>
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500">Email</label>
+              <label className="text-xs text-gray-500">{t("email")}</label>
               <p className="mt-1 text-sm text-white">{email}</p>
-              <p className="text-xs text-gray-600 mt-1">
-                Email address cannot be changed.
-              </p>
+              <p className="text-xs text-gray-600 mt-1">{t("emailCannotChange")}</p>
             </div>
             <button
               type="button"
@@ -392,30 +402,30 @@ export function SettingsPage({
               disabled={profileSaving}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
             >
-              {profileSaving ? "Saving…" : "Save profile"}
+              {profileSaving ? t("saving") : t("saveProfile")}
             </button>
           </div>
         </Section>
 
-        <Section title="Change password">
+        <Section title={t("changePassword")}>
           <div className="space-y-3 max-w-md">
             <input
               type="password"
-              placeholder="Current password"
+              placeholder={t("currentPassword")}
               className={inputClass}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
             />
             <input
               type="password"
-              placeholder="New password"
+              placeholder={t("newPassword")}
               className={inputClass}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <input
               type="password"
-              placeholder="Confirm new password"
+              placeholder={t("confirmNewPassword")}
               className={inputClass}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -429,21 +439,20 @@ export function SettingsPage({
               disabled={passwordSaving}
               className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white hover:border-white/20 disabled:opacity-50"
             >
-              {passwordSaving ? "Updating…" : "Update password"}
+              {passwordSaving ? t("updating") : t("updatePassword")}
             </button>
           </div>
         </Section>
 
-        <Section title="Program settings">
+        <Section title={t("programSettings")}>
           <div className="space-y-4">
             {regenConfirm && (
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-                Updating goal or cooking frequency will regenerate your meal plan
-                and program. Continue?
+                {t("regenContinue")}
               </p>
             )}
             <div>
-              <label className="text-xs text-gray-500">Current weight (kg)</label>
+              <label className="text-xs text-gray-500">{t("currentWeight")}</label>
               <input
                 type="number"
                 step="0.1"
@@ -453,22 +462,24 @@ export function SettingsPage({
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Goal body type</label>
+              <label className="text-xs text-gray-500">{t("goalBody")}</label>
               <select
                 className={`mt-1 ${inputClass}`}
                 value={goalBody}
                 onChange={(e) => setGoalBody(e.target.value as GoalBodyType)}
               >
                 <option value="">—</option>
-                {GOAL_BODY_OPTIONS.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.title}
+                {GOAL_BODY_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {tOnboarding(goalBodyTranslationKey(id))}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500">Cooking frequency</label>
+              <label className="text-xs text-gray-500">
+                {t("cookingFrequency")}
+              </label>
               <select
                 className={`mt-1 ${inputClass}`}
                 value={cookFreq}
@@ -477,14 +488,14 @@ export function SettingsPage({
                 <option value="">—</option>
                 {COOK_OPTIONS.map((o) => (
                   <option key={o} value={o}>
-                    {o}
+                    {tOnboarding(cookOptionKey(o))}
                   </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="text-xs text-gray-500">
-                Dietary restrictions / allergies
+                {t("dietaryAllergies")}
               </label>
               <textarea
                 className={`mt-1 ${inputClass}`}
@@ -494,7 +505,7 @@ export function SettingsPage({
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Sports & activities</label>
+              <label className="text-xs text-gray-500">{t("sportsActivities")}</label>
               <input
                 className={`mt-1 ${inputClass}`}
                 value={sports}
@@ -507,33 +518,36 @@ export function SettingsPage({
               disabled={programSaving}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
             >
-              {programSaving ? "Saving…" : regenConfirm ? "Confirm & save" : "Save changes"}
+              {programSaving
+                ? t("saving")
+                : regenConfirm
+                  ? t("confirmSave")
+                  : t("saveChanges")}
             </button>
           </div>
         </Section>
 
-        <Section title="Subscription & billing">
+        <Section title={t("subscription")}>
           {accessState === "trial_active" && (
             <div className="space-y-3">
               <span className="inline-block rounded-full bg-amber-500/20 text-amber-200 text-xs px-3 py-1">
-                Free Trial 🟡
+                {t("freeTrialBadge")}
               </span>
               <p className="text-sm text-white">
-                Your trial ends on{" "}
-                {formatTrialEndDateTime(
-                  premium.trial_ends_at ?? subscription?.trial_end ?? ""
-                )}
+                {t("trialEndsOn", {
+                  date: formatTrialEndDateTime(
+                    premium.trial_ends_at ?? subscription?.trial_end ?? ""
+                  ),
+                })}
               </p>
-              <p className="text-xs text-gray-500">
-                You won&apos;t be charged until your trial ends.
-              </p>
+              <p className="text-xs text-gray-500">{t("trialNoCharge")}</p>
               <button
                 type="button"
                 disabled={checkoutLoading}
                 onClick={() => startCheckout(false)}
                 className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
               >
-                Subscribe now for {SUBSCRIPTION_PRICE_LABEL}
+                {t("subscribeNow", { price: SUBSCRIPTION_PRICE_LABEL })}
               </button>
             </div>
           )}
@@ -541,12 +555,12 @@ export function SettingsPage({
           {accessState === "subscriber" && (
             <div className="space-y-3">
               <span className="inline-block rounded-full bg-accent/20 text-accent text-xs px-3 py-1">
-                Premium ✅
+                {t("premiumActive")}
               </span>
-              <p className="text-sm text-white">Your subscription is active.</p>
+              <p className="text-sm text-white">{t("subscriptionActive")}</p>
               {subscription?.current_period_end && (
                 <p className="text-sm text-gray-400">
-                  Next billing date:{" "}
+                  {t("nextBilling")}{" "}
                   {formatTrialEndDateTime(subscription.current_period_end)}
                 </p>
               )}
@@ -556,7 +570,7 @@ export function SettingsPage({
                 onClick={openPortal}
                 className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white hover:border-white/20 disabled:opacity-50"
               >
-                {portalLoading ? "Loading…" : "Manage subscription"}
+                {portalLoading ? tCommon("loading") : t("manageSubscription")}
               </button>
             </div>
           )}
@@ -564,7 +578,9 @@ export function SettingsPage({
           {(accessState === "never_trial" || accessState === "trial_expired") && (
             <div className="space-y-3">
               <span className="inline-block rounded-full bg-red-500/20 text-red-300 text-xs px-3 py-1">
-                {accessState === "trial_expired" ? "Trial Ended 🔴" : "Not subscribed"}
+                {accessState === "trial_expired"
+                  ? t("trialEnded")
+                  : t("notSubscribed")}
               </span>
               <button
                 type="button"
@@ -572,22 +588,20 @@ export function SettingsPage({
                 onClick={() => startCheckout(accessState === "never_trial")}
                 className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
               >
-                Resubscribe for {SUBSCRIPTION_PRICE_LABEL}
+                {t("resubscribe", { price: SUBSCRIPTION_PRICE_LABEL })}
               </button>
             </div>
           )}
         </Section>
 
-        <Section title="Danger zone">
-          <p className="text-sm text-gray-400 mb-3">
-            Permanently delete your account and all data.
-          </p>
+        <Section title={t("dangerZone")}>
+          <p className="text-sm text-gray-400 mb-3">{t("deleteDataWarning")}</p>
           <button
             type="button"
             onClick={() => setDeleteOpen(true)}
             className="rounded-lg border border-red-500/50 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10"
           >
-            Delete my account
+            {t("deleteMyAccount")}
           </button>
         </Section>
 
@@ -599,22 +613,21 @@ export function SettingsPage({
           <button
             type="button"
             className="absolute inset-0 bg-black/70"
-            aria-label="Close"
+            aria-label={tCommon("close")}
             onClick={() => setDeleteOpen(false)}
           />
           <div className="relative max-w-md w-full rounded-2xl border border-white/10 bg-card p-6">
-            <h3 className="text-lg font-semibold text-white">Delete account?</h3>
-            <p className="mt-2 text-sm text-gray-400">
-              Are you sure? This will permanently delete your account, program,
-              and all logged data. This cannot be undone.
-            </p>
+            <h3 className="text-lg font-semibold text-white">
+              {t("deleteAccountTitle")}
+            </h3>
+            <p className="mt-2 text-sm text-gray-400">{t("deleteAccountConfirm")}</p>
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
                 onClick={() => setDeleteOpen(false)}
                 className="flex-1 rounded-lg border border-white/10 py-2 text-sm text-gray-300"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 type="button"
@@ -622,7 +635,7 @@ export function SettingsPage({
                 onClick={deleteAccount}
                 className="flex-1 rounded-lg bg-red-600 py-2 text-sm text-white disabled:opacity-50"
               >
-                {deleteLoading ? "Deleting…" : "Yes, delete everything"}
+                {deleteLoading ? t("deleting") : t("deleteConfirm")}
               </button>
             </div>
           </div>

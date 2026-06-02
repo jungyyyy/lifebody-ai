@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Modal } from "@/components/app/Modal";
 import { localDateString } from "@/lib/dates";
 
@@ -36,6 +37,8 @@ export function WeightModal({
   onSuccess: (msg: string, warning?: string) => void;
   date: string;
 }) {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const [weight, setWeight] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +53,7 @@ export function WeightModal({
     const json = await res.json();
     setLoading(false);
     if (!res.ok) {
-      onSuccess(json.error ?? "Failed to log weight");
+      onSuccess(json.error ?? t("failedWeight"));
       return;
     }
     onSuccess(json.trendMessage, json.warningMessage);
@@ -59,21 +62,23 @@ export function WeightModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Log weight">
+    <Modal open={open} onClose={onClose} title={t("logWeightTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Weight (kg)</label>
+          <label className="block text-sm text-gray-400 mb-1.5">
+            {t("weightKg")}
+          </label>
           <input
             type="number"
             step="0.1"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             className={inputClass}
-            placeholder="e.g. 75.5"
+            placeholder={t("weightPlaceholder")}
             required
           />
         </div>
-        <SubmitButton loading={loading}>Save</SubmitButton>
+        <SubmitButton loading={loading}>{tCommon("save")}</SubmitButton>
       </form>
     </Modal>
   );
@@ -90,6 +95,8 @@ export function SportModal({
   onSuccess: () => void;
   date: string;
 }) {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const [activity, setActivity] = useState("");
   const [minutes, setMinutes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -116,31 +123,35 @@ export function SportModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Log sport">
+    <Modal open={open} onClose={onClose} title={t("logSportTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">What did you do?</label>
+          <label className="block text-sm text-gray-400 mb-1.5">
+            {t("sportWhatDidYou")}
+          </label>
           <input
             value={activity}
             onChange={(e) => setActivity(e.target.value)}
             className={inputClass}
-            placeholder="e.g. Running, yoga"
+            placeholder={t("sportPlaceholderDetail")}
             required
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Duration (minutes)</label>
+          <label className="block text-sm text-gray-400 mb-1.5">
+            {t("duration")}
+          </label>
           <input
             type="number"
             value={minutes}
             onChange={(e) => setMinutes(e.target.value)}
             className={inputClass}
-            placeholder="30"
+            placeholder={t("durationPlaceholder")}
             required
             min={1}
           />
         </div>
-        <SubmitButton loading={loading}>Save</SubmitButton>
+        <SubmitButton loading={loading}>{tCommon("save")}</SubmitButton>
       </form>
     </Modal>
   );
@@ -159,6 +170,8 @@ export function FastingModal({
   onSuccess: () => void;
   date: string;
 }) {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const [hours, setHours] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -177,9 +190,9 @@ export function FastingModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Log fasting">
+    <Modal open={open} onClose={onClose} title={t("logFastingTitle")}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-400">How many hours did you fast today?</p>
+        <p className="text-sm text-gray-400">{t("fastingHowMany")}</p>
         <div className="grid grid-cols-3 gap-2">
           {FASTING_PRESETS.map((h) => (
             <button
@@ -206,14 +219,14 @@ export function FastingModal({
             value={hours}
             onChange={(e) => setHours(e.target.value)}
             className={inputClass}
-            placeholder="Other hours"
+            placeholder={t("fastingOtherHours")}
           />
           <button
             type="submit"
             disabled={loading || !hours}
             className="shrink-0 rounded-lg bg-accent px-4 text-sm font-medium text-black"
           >
-            Save
+            {tCommon("save")}
           </button>
         </form>
       </div>

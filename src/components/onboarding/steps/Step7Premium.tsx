@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PaywallScreen } from "@/components/premium/PaywallScreen";
 import type { OnboardingFormData } from "@/types/onboarding";
 
@@ -13,6 +14,8 @@ export function Step7Premium({
   onboardingData: OnboardingFormData;
 }) {
   const router = useRouter();
+  const t = useTranslations("onboarding");
+  const tCommon = useTranslations("common");
   const [maybeLaterLoading, setMaybeLaterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +26,7 @@ export function Step7Premium({
       body: JSON.stringify(onboardingData),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error ?? "Could not complete onboarding");
+    if (!res.ok) throw new Error(json.error ?? t("completeFailed"));
   }
 
   async function handleMaybeLater() {
@@ -34,7 +37,7 @@ export function Step7Premium({
       router.refresh();
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : tCommon("somethingWrong"));
       setMaybeLaterLoading(false);
     }
   }

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
 interface AuthCardProps {
   title: string;
@@ -8,12 +12,16 @@ interface AuthCardProps {
 }
 
 export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
+  const t = useTranslations("common");
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-background">
-      <Link href="/" className="mb-8 flex items-center gap-2 text-xl font-semibold text-white">
-        <span aria-hidden>🌿</span>
-        <span>LifeBody AI</span>
-      </Link>
+      <div className="mb-8 flex w-full max-w-md items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 text-xl font-semibold text-white">
+          <span aria-hidden>🌿</span>
+          <span>{t("appName")}</span>
+        </Link>
+        <LanguageSwitcher />
+      </div>
 
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-card p-8 shadow-xl">
         <h1 className="text-2xl font-semibold text-white">{title}</h1>

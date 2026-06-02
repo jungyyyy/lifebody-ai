@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ProgressBar } from "@/components/app/ProgressBar";
 import type { DashboardSummary } from "@/lib/dashboard/queries";
 import { formatDisplayDate, localDateString } from "@/lib/dates";
@@ -26,6 +27,8 @@ export function DashboardHome({
   accessState: AccessState;
   trialEndsAt: string | null;
 }) {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const [date] = useState(() => localDateString());
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -87,19 +90,30 @@ export function DashboardHome({
 
       <div>
         <h1 className="text-2xl font-semibold text-white">
-          Welcome back, {nickname}
+          {t("welcome", { name: nickname })}
         </h1>
         {s && (
           <p className="mt-1 text-sm text-gray-400">
-            {formatDisplayDate(s.displayDate)} · Day {s.programDay} of{" "}
-            {s.programTotalDays} · Week {Math.min(s.programLengthWeeks, Math.ceil(s.programDay / 7))} of {s.programLengthWeeks}
+            {formatDisplayDate(s.displayDate)} ·{" "}
+            {tCommon("dayOf", {
+              day: s.programDay,
+              total: s.programTotalDays,
+            })}{" "}
+            ·{" "}
+            {tCommon("weekOf", {
+              week: Math.min(
+                s.programLengthWeeks,
+                Math.ceil(s.programDay / 7)
+              ),
+              total: s.programLengthWeeks,
+            })}
           </p>
         )}
       </div>
 
       {s?.periodActive && (
         <p className="mt-4 rounded-lg border border-pink-500/20 bg-pink-500/10 px-4 py-3 text-sm text-pink-200">
-          You may see weight fluctuation this week — that&apos;s completely normal 🌸
+          {t("periodNote")}
         </p>
       )}
 
@@ -107,33 +121,37 @@ export function DashboardHome({
         {s ? (
           <>
             <ProgressBar
-              label="Calories today"
+              label={t("caloriesToday")}
               value={s.todayCalories}
               max={s.calorieTarget}
-              unit=" kcal"
+              unit={` ${tCommon("kcal")}`}
             />
             <ProgressBar
-              label="Protein today"
+              label={t("proteinToday")}
               value={s.todayProtein}
               max={s.proteinTarget}
-              unit="g"
+              unit={tCommon("g")}
             />
           </>
         ) : (
-          <p className="text-gray-500 text-sm">Loading today&apos;s stats…</p>
+          <p className="text-gray-500 text-sm">{t("loadingStats")}</p>
         )}
 
         <div className="grid grid-cols-2 gap-3 pt-2">
           <StatChip
-            label="Fasting"
+            label={t("fasting")}
             value={
-              s?.fastingHours != null ? `${s.fastingHours}h logged` : "Not logged"
+              s?.fastingHours != null
+                ? t("fastingLogged", { hours: s.fastingHours })
+                : tCommon("notLoggedStat")
             }
           />
           <StatChip
-            label="Weight"
+            label={t("weight")}
             value={
-              s?.weightToday != null ? `${s.weightToday} kg` : "Not logged"
+              s?.weightToday != null
+                ? `${s.weightToday} ${tCommon("kg")}`
+                : tCommon("notLoggedStat")
             }
           />
         </div>
@@ -142,7 +160,7 @@ export function DashboardHome({
       {s && (
         <div className="mt-6">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            Today&apos;s activity
+            {t("todayActivity")}
           </p>
           {s.todaySports.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -152,7 +170,7 @@ export function DashboardHome({
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background px-3 py-1.5 text-sm text-gray-200"
                 >
                   <span aria-hidden>🏃</span>
-                  {sport.activity} · {sport.duration_minutes} min
+                  {sport.activity} · {sport.duration_minutes} {tCommon("min")}
                 </span>
               ))}
             </div>
@@ -162,7 +180,7 @@ export function DashboardHome({
               onClick={() => setSportOpen(true)}
               className="text-sm text-gray-500 hover:text-accent transition-colors"
             >
-              + Log activity
+              {t("logActivity")}
             </button>
           )}
         </div>
@@ -170,13 +188,13 @@ export function DashboardHome({
 
       <div className="mt-6">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-          Quick actions
+          {t("quickActions")}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <QuickBtn href="/journal">+ Log food</QuickBtn>
-          <QuickBtn onClick={() => setWeightOpen(true)}>+ Log weight</QuickBtn>
-          <QuickBtn onClick={() => setSportOpen(true)}>+ Log sport</QuickBtn>
-          <QuickBtn onClick={() => setFastingOpen(true)}>+ Log fasting</QuickBtn>
+          <QuickBtn href="/journal">{t("logFood")}</QuickBtn>
+          <QuickBtn onClick={() => setWeightOpen(true)}>{t("logWeight")}</QuickBtn>
+          <QuickBtn onClick={() => setSportOpen(true)}>{t("logSport")}</QuickBtn>
+          <QuickBtn onClick={() => setFastingOpen(true)}>{t("logFasting")}</QuickBtn>
           <button
             type="button"
             onClick={togglePeriod}
@@ -187,7 +205,7 @@ export function DashboardHome({
                 : "border-white/10 text-gray-300 hover:border-white/20"
             }`}
           >
-            {s?.periodActive ? "🌸 On my period" : "On my period"}
+            {s?.periodActive ? t("onPeriodActive") : t("onPeriod")}
           </button>
         </div>
       </div>
@@ -195,21 +213,27 @@ export function DashboardHome({
       {s && (
         <div className="mt-8">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            This week
+            {t("thisWeek")}
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <WeekCard label="Avg calories" value={`${s.weekAvgCalories} kcal`} />
-            <WeekCard label="Avg protein" value={`${s.weekAvgProtein}g`} />
             <WeekCard
-              label="Weight trend"
+              label={t("avgCalories")}
+              value={`${s.weekAvgCalories} ${tCommon("kcal")}`}
+            />
+            <WeekCard
+              label={t("avgProtein")}
+              value={`${s.weekAvgProtein}${tCommon("g")}`}
+            />
+            <WeekCard
+              label={t("weightTrend")}
               value={
                 s.weekWeightChange != null
-                  ? `${s.weekWeightChange > 0 ? "+" : ""}${s.weekWeightChange}kg`
+                  ? `${s.weekWeightChange > 0 ? "+" : ""}${s.weekWeightChange}${tCommon("kg")}`
                   : "—"
               }
             />
             <WeekCard
-              label="Days journaled"
+              label={t("daysJournaled")}
               value={`${s.daysJournaledThisWeek} / 7`}
             />
           </div>
@@ -231,7 +255,7 @@ export function DashboardHome({
         onClose={() => setSportOpen(false)}
         date={date}
         onSuccess={() => {
-          setToast("Sport logged ✓");
+          setToast(t("sportLogged"));
           load();
         }}
       />
@@ -240,7 +264,7 @@ export function DashboardHome({
         onClose={() => setFastingOpen(false)}
         date={date}
         onSuccess={() => {
-          setToast("Fasting logged ✓");
+          setToast(t("fastingLoggedToast"));
           load();
         }}
       />

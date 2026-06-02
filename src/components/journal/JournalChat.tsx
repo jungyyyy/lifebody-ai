@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ChatMessage, JournalFoodLogResponse } from "@/types/journal";
 import { localDateString } from "@/lib/dates";
 
-function FoodBreakdown({ log }: { log: JournalFoodLogResponse }) {
+function FoodBreakdown({
+  log,
+  t,
+  tCommon,
+}: {
+  log: JournalFoodLogResponse;
+  t: ReturnType<typeof useTranslations<"journal">>;
+  tCommon: ReturnType<typeof useTranslations<"common">>;
+}) {
   return (
     <div className="mt-2 overflow-hidden rounded-lg border border-white/10 text-xs">
       <table className="w-full">
         <thead>
           <tr className="bg-white/5 text-gray-400">
-            <th className="px-2 py-1.5 text-left font-medium">Food</th>
-            <th className="px-2 py-1.5 text-right font-medium">kcal</th>
-            <th className="px-2 py-1.5 text-right font-medium">protein</th>
+            <th className="px-2 py-1.5 text-left font-medium">{t("food")}</th>
+            <th className="px-2 py-1.5 text-right font-medium">
+              {tCommon("kcal")}
+            </th>
+            <th className="px-2 py-1.5 text-right font-medium">
+              {t("proteinCol")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -31,8 +44,10 @@ function FoodBreakdown({ log }: { log: JournalFoodLogResponse }) {
             </tr>
           ))}
           <tr className="border-t border-white/10 font-medium text-white">
-            <td className="px-2 py-1.5">Total</td>
-            <td className="px-2 py-1.5 text-right">{Math.round(log.total_calories)}</td>
+            <td className="px-2 py-1.5">{t("total")}</td>
+            <td className="px-2 py-1.5 text-right">
+              {Math.round(log.total_calories)}
+            </td>
             <td className="px-2 py-1.5 text-right">{log.total_protein}g</td>
           </tr>
         </tbody>
@@ -42,6 +57,8 @@ function FoodBreakdown({ log }: { log: JournalFoodLogResponse }) {
 }
 
 export function JournalChat() {
+  const t = useTranslations("journal");
+  const tCommon = useTranslations("common");
   const [date] = useState(() => localDateString());
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -87,7 +104,7 @@ export function JournalChat() {
       });
       const json = await res.json();
 
-      if (!res.ok) throw new Error(json.error ?? "Failed");
+      if (!res.ok) throw new Error(json.error ?? t("failed"));
 
       setTotals(json.todayTotals);
       setTargets({
@@ -111,9 +128,7 @@ export function JournalChat() {
           id: crypto.randomUUID(),
           role: "assistant",
           content:
-            err instanceof Error
-              ? err.message
-              : "Something went wrong. Please try again.",
+            err instanceof Error ? err.message : tCommon("somethingWrong"),
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -125,21 +140,21 @@ export function JournalChat() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-2rem)] max-w-2xl mx-auto">
       <div className="shrink-0 border-b border-white/10 bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold text-white">Food journal</h1>
+        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          Today:{" "}
-          <span className="text-white tabular-nums">{totals.calories}</span> /{" "}
-          {targets.calories} kcal ·{" "}
-          <span className="text-white tabular-nums">{totals.protein}</span> /{" "}
-          {targets.protein}g protein
+          {t("todaySummary", {
+            calories: totals.calories,
+            calorieTarget: targets.calories,
+            protein: totals.protein,
+            proteinTarget: targets.protein,
+          })}
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-500 py-8">
-            Log meals naturally — e.g. &ldquo;I had chicken and rice for
-            lunch&rdquo; — or ask &ldquo;What have I eaten today?&rdquo;
+            {t("emptyHint")}
           </p>
         )}
         {messages.map((msg) => (
@@ -155,12 +170,14 @@ export function JournalChat() {
               }`}
             >
               <p className="whitespace-pre-wrap">{msg.content}</p>
-              {msg.log && <FoodBreakdown log={msg.log} />}
+              {msg.log && (
+                <FoodBreakdown log={msg.log} t={t} tCommon={tCommon} />
+              )}
             </div>
           </div>
         ))}
         {loading && (
-          <p className="text-sm text-gray-500 animate-pulse">Thinking…</p>
+          <p className="text-sm text-gray-500 animate-pulse">{t("thinking")}</p>
         )}
         <div ref={bottomRef} />
       </div>
@@ -172,7 +189,7 @@ export function JournalChat() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Log food or ask a question…"
+          placeholder={t("placeholder")}
           className="flex-1 rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500"
           disabled={loading}
         />
@@ -181,7 +198,7 @@ export function JournalChat() {
           disabled={loading || !input.trim()}
           className="shrink-0 rounded-xl bg-accent px-5 py-3 text-sm font-medium text-black disabled:opacity-50"
         >
-          Send
+          {t("send")}
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { WeightChart } from "@/components/progress/WeightChart";
 import type { FourWeekAnalysisData } from "@/types/fourWeekAnalysis";
 import { formatShortDate } from "@/lib/program/dates";
@@ -10,10 +11,10 @@ const TREND_ICONS: Record<string, string> = {
   declining: "↓",
 };
 
-const PACE_LABELS: Record<string, string> = {
-  ahead: "Ahead of plan",
-  on_track: "On track",
-  behind: "Behind plan",
+const PACE_KEYS: Record<string, "ahead" | "onTrackPace" | "behind"> = {
+  ahead: "ahead",
+  on_track: "onTrackPace",
+  behind: "behind",
 };
 
 export function FourWeekAnalysisReport({
@@ -29,6 +30,10 @@ export function FourWeekAnalysisReport({
   periodEnd: string;
   weights: { date: string; weight: number }[];
 }) {
+  const t = useTranslations("assessment");
+  const tProgress = useTranslations("progress");
+  const tPremium = useTranslations("premium");
+  const tCommon = useTranslations("common");
   const a = analysis;
   const startWeight = weights.length > 0 ? weights[0].weight : 0;
   const endWeight =
@@ -40,7 +45,7 @@ export function FourWeekAnalysisReport({
     <article className="space-y-6">
       <header className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/15 via-card to-card p-6 sm:p-8">
         <p className="text-xs font-medium text-violet-300 uppercase tracking-widest">
-          4-week deep analysis
+          {tProgress("fourWeekTitle")}
         </p>
         <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">
           {weekRange}
@@ -52,22 +57,27 @@ export function FourWeekAnalysisReport({
 
       <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-          Progress overview
+          {tProgress("progressOverview")}
         </h2>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Stat
-            label="Actual loss"
-            value={`${a.total_weight_change_kg > 0 ? "−" : "+"}${Math.abs(a.total_weight_change_kg)} kg`}
+            label={t("actualLoss")}
+            value={`${a.total_weight_change_kg > 0 ? "−" : "+"}${Math.abs(a.total_weight_change_kg)} ${tCommon("kg")}`}
             accent
           />
           <Stat
-            label="Expected"
-            value={`${a.expected_weight_change_kg} kg`}
+            label={t("expected")}
+            value={`${a.expected_weight_change_kg} ${tCommon("kg")}`}
           />
-          <Stat label="Pace" value={PACE_LABELS[a.pace] ?? a.pace} />
           <Stat
-            label="Gap"
-            value={`${a.pace_gap_kg > 0 ? "+" : ""}${a.pace_gap_kg} kg`}
+            label={t("pace")}
+            value={
+              PACE_KEYS[a.pace] ? t(PACE_KEYS[a.pace]) : a.pace
+            }
+          />
+          <Stat
+            label={t("gap")}
+            value={`${a.pace_gap_kg > 0 ? "+" : ""}${a.pace_gap_kg} ${tCommon("kg")}`}
           />
         </div>
         <div
@@ -77,7 +87,7 @@ export function FourWeekAnalysisReport({
               : "bg-amber-500/20 text-amber-200"
           }`}
         >
-          {a.on_track ? "On track overall" : "Needs adjustment"}
+          {a.on_track ? t("onTrackOverall") : t("needsAdjustment")}
         </div>
       </section>
 
@@ -89,14 +99,14 @@ export function FourWeekAnalysisReport({
         weekTrend={null}
         periodEnd={periodEnd}
         dayCount={28}
-        title="4-week weight curve"
+        title={tProgress("fourWeekWeightCurve")}
         showSummary={false}
       />
 
       {a.long_term_patterns.length > 0 && (
         <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
           <h2 className="text-sm font-medium text-white flex items-center gap-2">
-            <span aria-hidden>🔍</span> Long-term patterns
+            <span aria-hidden>🔍</span> {tProgress("longTermPatterns")}
           </h2>
           <ul className="mt-4 space-y-4">
             {a.long_term_patterns.map((p, i) => (
@@ -117,18 +127,18 @@ export function FourWeekAnalysisReport({
 
       <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">
-          Trends
+          {tProgress("trends")}
         </h2>
         <div className="grid grid-cols-3 gap-3">
-          <TrendChip label="Diet quality" value={a.diet_quality_trend} />
-          <TrendChip label="Fitness" value={a.fitness_trend} />
-          <TrendChip label="Protein" value={a.protein_trend} />
+          <TrendChip label={t("dietQuality")} value={a.diet_quality_trend} />
+          <TrendChip label={t("fitness")} value={a.fitness_trend} />
+          <TrendChip label={t("proteinTrend")} value={a.protein_trend} />
         </div>
       </section>
 
       <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
         <h2 className="text-sm font-medium text-white">
-          Next 4 weeks — your focus
+          {tProgress("next4WeeksFocus")}
         </h2>
         <ol className="mt-3 space-y-2 list-decimal list-inside">
           {a.next_4_weeks_focus.map((f, i) => (
@@ -142,7 +152,7 @@ export function FourWeekAnalysisReport({
       {endChanged && (
         <section className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-5 sm:p-6">
           <h2 className="text-sm font-medium text-sky-200">
-            Program end date updated
+            {tProgress("programEndUpdated")}
           </h2>
           <p className="mt-2 text-sm text-gray-300">
             <span className="line-through text-gray-500">
@@ -160,7 +170,7 @@ export function FourWeekAnalysisReport({
       {a.maintenance_break_recommended && a.maintenance_break_message && (
         <section className="rounded-xl border-2 border-amber-500/40 bg-amber-500/10 p-5 sm:p-6">
           <h2 className="text-lg font-medium text-amber-200">
-            Maintenance break recommended
+            {tProgress("maintenanceRecommended")}
           </h2>
           <p className="mt-3 text-sm text-amber-100/90 leading-relaxed">
             {a.maintenance_break_message}
@@ -170,12 +180,12 @@ export function FourWeekAnalysisReport({
 
       <footer className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-6 sm:p-8 shadow-inner">
         <p className="text-xs text-violet-300/80 uppercase tracking-widest font-serif">
-          Coach&apos;s letter
+          {tProgress("coachesLetter")}
         </p>
         <p className="mt-4 text-base sm:text-lg text-white leading-relaxed font-serif italic">
           {a.coach_letter}
         </p>
-        <p className="mt-6 text-sm text-gray-500">— LifeBody AI 🌿</p>
+        <p className="mt-6 text-sm text-gray-500">{tPremium("coachSignoff")}</p>
       </footer>
     </article>
   );

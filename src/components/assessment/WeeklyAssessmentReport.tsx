@@ -1,16 +1,19 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { WeeklyAssessmentData } from "@/types/assessment";
 import { assessmentPatterns } from "@/types/assessment";
 import { formatShortDate } from "@/lib/program/dates";
 
-const PATTERN_LABELS: Record<string, string> = {
-  trigger_food: "Trigger food",
-  fasting_correlation: "Fasting & weight",
-  period_weight: "Period & weight",
-  sport_overeating: "Workout & eating",
-  consistency: "Consistency",
-  calorie_floor: "Calorie floor",
-  weight_alert: "Weight alert",
-  plateau: "Plateau",
+const PATTERN_KEYS: Record<string, string> = {
+  trigger_food: "triggerFood",
+  fasting_correlation: "fastingCorrelation",
+  period_weight: "periodWeight",
+  sport_overeating: "sportOvereating",
+  consistency: "consistency",
+  calorie_floor: "calorieFloor",
+  weight_alert: "weightAlert",
+  plateau: "plateau",
 };
 
 export function WeeklyAssessmentReport({
@@ -22,6 +25,9 @@ export function WeeklyAssessmentReport({
   periodStart: string;
   periodEnd: string;
 }) {
+  const t = useTranslations("assessment");
+  const tPremium = useTranslations("premium");
+  const tCommon = useTranslations("common");
   const a = assessment;
   const weightSign = a.weight_change_kg > 0 ? "+" : "";
   const patterns = assessmentPatterns(a);
@@ -30,10 +36,10 @@ export function WeeklyAssessmentReport({
     <article className="space-y-6">
       <header className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 to-card p-6 sm:p-8">
         <p className="text-xs font-medium text-accent uppercase tracking-widest">
-          Weekly coach letter
+          {tPremium("coachLetter")}
         </p>
         <h1 className="mt-2 text-2xl sm:text-3xl font-semibold text-white">
-          Week {a.week_number} assessment
+          {t("weekAssessmentTitle", { week: a.week_number })}
         </h1>
         <p className="mt-2 text-sm text-gray-400">
           {formatShortDate(periodStart)} – {formatShortDate(periodEnd)}
@@ -45,21 +51,39 @@ export function WeeklyAssessmentReport({
               : "bg-amber-500/20 text-amber-200"
           }`}
         >
-          {a.on_track ? "On track" : "Needs attention"}
+          {a.on_track ? t("onTrackPace") : t("needsAttention")}
         </div>
       </header>
 
       <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-          This week at a glance
+          {tPremium("weekAtGlance")}
         </h2>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Stat label="Weight change" value={`${weightSign}${a.weight_change_kg} kg`} />
-          <Stat label="Avg calories" value={`${a.avg_daily_calories} kcal`} />
-          <Stat label="Avg protein" value={`${a.avg_daily_protein}g`} />
-          <Stat label="Fasting" value={`${a.avg_fasting_hours}h avg`} />
-          <Stat label="Workouts" value={`${a.sport_sessions} sessions`} />
-          <Stat label="Journaled" value={`${a.days_journaled} / 7 days`} />
+          <Stat
+            label={t("weightChange")}
+            value={`${weightSign}${a.weight_change_kg} ${tCommon("kg")}`}
+          />
+          <Stat
+            label={t("avgCalories")}
+            value={`${a.avg_daily_calories} ${tCommon("kcal")}`}
+          />
+          <Stat
+            label={t("avgProtein")}
+            value={`${a.avg_daily_protein}${tCommon("g")}`}
+          />
+          <Stat
+            label={t("fastingAvg")}
+            value={t("fastingAvgValue", { hours: a.avg_fasting_hours })}
+          />
+          <Stat
+            label={t("workouts")}
+            value={t("workoutSessions", { count: a.sport_sessions })}
+          />
+          <Stat
+            label={t("journaled")}
+            value={t("journaledDays", { days: a.days_journaled })}
+          />
         </div>
       </section>
 
@@ -74,7 +98,7 @@ export function WeeklyAssessmentReport({
       {patterns.length > 0 && (
         <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
           <h2 className="text-sm font-medium text-white flex items-center gap-2">
-            <span aria-hidden>🧠</span> Patterns I noticed
+            <span aria-hidden>🧠</span> {tPremium("patternsNoticed")}
           </h2>
           <ul className="mt-4 space-y-4">
             {patterns.map((p, i) => (
@@ -83,7 +107,7 @@ export function WeeklyAssessmentReport({
                 className="rounded-lg border border-white/10 bg-background p-4"
               >
                 <p className="text-xs font-medium text-accent uppercase tracking-wide">
-                  {PATTERN_LABELS[p.type] ?? p.type}
+                  {PATTERN_KEYS[p.type] ? t(PATTERN_KEYS[p.type]) : p.type}
                 </p>
                 <p className="mt-2 text-sm text-gray-200 leading-relaxed">
                   {p.insight}
@@ -103,7 +127,7 @@ export function WeeklyAssessmentReport({
       {a.highlights.length > 0 && (
         <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
           <h2 className="text-sm font-medium text-white flex items-center gap-2">
-            <span aria-hidden>✅</span> What went well
+            <span aria-hidden>✅</span> {tPremium("whatWentWell")}
           </h2>
           <ul className="mt-3 space-y-2">
             {a.highlights.map((h, i) => (
@@ -118,7 +142,7 @@ export function WeeklyAssessmentReport({
       {(a.program_rule_updates?.length ?? 0) > 0 && (
         <section className="rounded-xl border border-accent/20 bg-accent/5 p-5 sm:p-6">
           <h2 className="text-sm font-medium text-accent uppercase tracking-wide">
-            New program rules
+            {tPremium("newProgramRules")}
           </h2>
           <ul className="mt-3 space-y-2">
             {a.program_rule_updates.map((rule, i) => (
@@ -128,15 +152,13 @@ export function WeeklyAssessmentReport({
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-gray-500">
-            These are saved to your program in My Program → Fasting &amp; Rules.
-          </p>
+          <p className="mt-3 text-xs text-gray-500">{tPremium("rulesSavedNote")}</p>
         </section>
       )}
 
       <section className="rounded-xl border border-white/10 bg-card p-5 sm:p-6">
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-          Next week&apos;s plan
+          {tPremium("nextWeekPlan")}
         </h2>
         <p className="mt-3 text-sm text-gray-300 leading-relaxed">
           {a.next_week_meal_plan_changes}
@@ -145,12 +167,12 @@ export function WeeklyAssessmentReport({
 
       <footer className="rounded-2xl border border-accent/30 bg-accent/5 p-6 sm:p-8">
         <h2 className="text-sm font-medium text-accent uppercase tracking-wide">
-          Your coach&apos;s note
+          {tPremium("coachNote")}
         </h2>
         <p className="mt-3 text-base text-white leading-relaxed italic">
           &ldquo;{a.motivational_message}&rdquo;
         </p>
-        <p className="mt-4 text-sm text-gray-500">— LifeBody AI 🌿</p>
+        <p className="mt-4 text-sm text-gray-500">{tPremium("coachSignoff")}</p>
       </footer>
     </article>
   );

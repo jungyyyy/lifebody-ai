@@ -1,24 +1,12 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { OnboardingFormData } from "@/types/onboarding";
 
 const OPTIONS = [
-  {
-    value: "0.5",
-    emoji: "🐢",
-    title: "Slow",
-    description: "Lose ~0.5kg per week — easiest to maintain, lowest restriction",
-  },
-  {
-    value: "0.6",
-    emoji: "🚶",
-    title: "Normal",
-    description: "Lose ~0.6kg per week — balanced approach",
-  },
-  {
-    value: "0.7",
-    emoji: "🏃",
-    title: "Fast",
-    description: "Lose ~0.7kg per week — more discipline, still safe",
-  },
+  { value: "0.5", emoji: "🐢", titleKey: "lossRateSlow", descKey: "lossRateSlowDesc" },
+  { value: "0.6", emoji: "🚶", titleKey: "lossRateNormal", descKey: "lossRateNormalDesc" },
+  { value: "0.7", emoji: "🏃", titleKey: "lossRateFast", descKey: "lossRateFastDesc" },
 ] as const;
 
 export function Step5LossRate({
@@ -28,6 +16,8 @@ export function Step5LossRate({
   data: OnboardingFormData;
   setData: React.Dispatch<React.SetStateAction<OnboardingFormData>>;
 }) {
+  const t = useTranslations("onboarding");
+
   return (
     <div className="grid gap-3">
       {OPTIONS.map((opt) => {
@@ -48,8 +38,8 @@ export function Step5LossRate({
             <span className="text-2xl" aria-hidden>
               {opt.emoji}
             </span>
-            <p className="mt-2 font-medium text-white">{opt.title}</p>
-            <p className="mt-1 text-sm text-gray-400">{opt.description}</p>
+            <p className="mt-2 font-medium text-white">{t(opt.titleKey)}</p>
+            <p className="mt-1 text-sm text-gray-400">{t(opt.descKey)}</p>
           </button>
         );
       })}

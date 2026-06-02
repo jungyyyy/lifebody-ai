@@ -11,12 +11,16 @@ function resolveGeminiModel(): string {
   return DEFAULT_GEMINI_MODEL;
 }
 
+import { getLanguageInstruction } from "@/lib/i18n/languageInstruction";
+import type { Locale } from "@/i18n/routing";
+
 const GEMINI_MODEL = resolveGeminiModel();
 
 export async function generateGeminiJson<T>(
   prompt: string,
   systemInstruction?: string,
-  model?: string
+  model?: string,
+  locale?: Locale | string
 ): Promise<T> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -26,17 +30,29 @@ export async function generateGeminiJson<T>(
   const modelId = model?.trim() || GEMINI_MODEL;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`;
 
+  const lang = locale ?? "en";
+  const langInstruction = getLanguageInstruction(lang);
+  let finalPrompt = prompt;
+  let finalSystem = systemInstruction;
+  if (langInstruction) {
+    if (systemInstruction) {
+      finalSystem = `${systemInstruction}\n\n${langInstruction}`;
+    } else {
+      finalPrompt = `${prompt}\n\n${langInstruction}`;
+    }
+  }
+
   const body: Record<string, unknown> = {
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    contents: [{ role: "user", parts: [{ text: finalPrompt }] }],
     generationConfig: {
       responseMimeType: "application/json",
       temperature: 0.4,
     },
   };
 
-  if (systemInstruction) {
+  if (finalSystem) {
     body.systemInstruction = {
-      parts: [{ text: systemInstruction }],
+      parts: [{ text: finalSystem }],
     };
   }
 

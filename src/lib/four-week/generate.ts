@@ -9,6 +9,7 @@ import { weekRangeLabel } from "@/lib/four-week/block";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import type { FourWeekAnalysisData } from "@/types/fourWeekAnalysis";
 import { localDateString } from "@/lib/dates";
+import type { Locale } from "@/i18n/routing";
 
 const FOUR_WEEK_MODEL = "gemini-2.5-flash";
 
@@ -54,7 +55,8 @@ function normalizeAnalysis(
 export async function generateFourWeekAnalysis(
   supabase: SupabaseClient,
   userId: string,
-  blockNumber: number
+  blockNumber: number,
+  locale: Locale = "en"
 ) {
   const data = await fetchFourWeekBlockData(supabase, userId, blockNumber);
 
@@ -62,7 +64,8 @@ export async function generateFourWeekAnalysis(
     await generateGeminiJson<FourWeekAnalysisData>(
       buildFourWeekAnalysisPrompt(data),
       "You are an evidence-based coach. Only report patterns supported by log data. Output valid JSON.",
-      FOUR_WEEK_MODEL
+      FOUR_WEEK_MODEL,
+      locale
     ),
     data
   );

@@ -7,6 +7,7 @@ import {
   regenerateMealPlan,
 } from "@/lib/program/regeneratePlans";
 import type { GeneratedProgram } from "@/types/program";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function PATCH(request: Request) {
   const { user, supabase, error } = await requireUser();
@@ -94,12 +95,13 @@ export async function PATCH(request: Request) {
 
     if (onboarding && programRow?.program) {
       try {
+        const locale = await getRequestLocale(user!.id);
         let program = programRow.program as GeneratedProgram;
         if (goalChanged || cookChanged) {
           program = {
             ...program,
-            meal_plan: await regenerateMealPlan(onboarding, program),
-            fitness_plan: await regenerateFitnessPlan(onboarding),
+            meal_plan: await regenerateMealPlan(onboarding, program, locale),
+            fitness_plan: await regenerateFitnessPlan(onboarding, locale),
           };
           await supabase
             .from("user_programs")

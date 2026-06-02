@@ -23,6 +23,7 @@ import {
   hasValidMealPlan,
 } from "@/lib/program/validatePlans";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { getRequestLocale } from "@/lib/i18n/server";
 import type { OnboardingFormData } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
 
@@ -57,8 +58,12 @@ export async function POST(request: Request) {
       weeklyLossRateKg: weeklyRate,
     });
 
+    const locale = await getRequestLocale(user!.id);
     const program = await generateGeminiJson<GeneratedProgram>(
-      buildProgramPrompt(body, body.assessment, calculation)
+      buildProgramPrompt(body, body.assessment, calculation),
+      undefined,
+      undefined,
+      locale
     );
 
     program.program_length_weeks = programWeeks;
@@ -95,10 +100,10 @@ export async function POST(request: Request) {
     }
 
     if (!hasValidMealPlan(program.meal_plan)) {
-      program.meal_plan = await regenerateMealPlan(body, program);
+      program.meal_plan = await regenerateMealPlan(body, program, locale);
     }
     if (!hasValidFitnessPlan(program.fitness_plan)) {
-      program.fitness_plan = await regenerateFitnessPlan(body);
+      program.fitness_plan = await regenerateFitnessPlan(body, locale);
     }
 
     const { error: onboardingError } = await upsertOnboardingData(

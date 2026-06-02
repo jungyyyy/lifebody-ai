@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app/AppShell";
 import { AccessProvider } from "@/components/premium/AccessContext";
@@ -32,7 +33,8 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
-  const nickname = profile?.nickname?.trim() || "there";
+  const t = await getTranslations("common");
+  const nickname = profile?.nickname?.trim() || t("there");
   const accessState = getAccessState(profile);
 
   return (

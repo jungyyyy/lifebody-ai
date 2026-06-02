@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import {
   AuthCard,
@@ -11,6 +12,7 @@ import {
 } from "@/components/AuthCard";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -41,12 +43,12 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <AuthCard title="Check your email">
+      <AuthCard title={t("checkEmail")}>
         <AuthMessage type="success">
-          We sent a password reset link to <strong className="text-white">{email}</strong>
+          {t("resetLinkSent", { email })}
         </AuthMessage>
         <p className="mt-4 text-sm text-gray-400 text-center">
-          <AuthLink href="/login">Back to sign in</AuthLink>
+          <AuthLink href="/login">{t("backToSignIn")}</AuthLink>
         </p>
       </AuthCard>
     );
@@ -54,12 +56,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthCard
-      title="Reset your password"
-      subtitle="Enter your email and we'll send you a reset link"
+      title={t("resetPassword")}
+      subtitle={t("resetSubtitle")}
       footer={
         <p className="text-gray-400">
-          Remember your password?{" "}
-          <AuthLink href="/login">Sign in</AuthLink>
+          {t("rememberPassword")}{" "}
+          <AuthLink href="/login">{t("signIn")}</AuthLink>
         </p>
       }
     >
@@ -67,17 +69,17 @@ export default function ForgotPasswordPage() {
         {error && <AuthMessage type="error">{error}</AuthMessage>}
 
         <AuthInput
-          label="Email"
+          label={t("email")}
           id="email"
           type="email"
           value={email}
           onChange={setEmail}
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
         />
 
         <AuthButton disabled={loading}>
-          {loading ? "Sending…" : "Send reset link"}
+          {loading ? t("sending") : t("sendResetLink")}
         </AuthButton>
       </form>
     </AuthCard>

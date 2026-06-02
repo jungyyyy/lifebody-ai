@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { FullProgram } from "@/types/program";
 
 export function OverviewTab({
@@ -7,6 +10,8 @@ export function OverviewTab({
   program: FullProgram;
   currentWeightKg: number;
 }) {
+  const t = useTranslations("program");
+  const tCommon = useTranslations("common");
   const milestones = program.week_milestones;
   const showMaintenance =
     program.maintenance_break?.show || program.maintenance_note;
@@ -35,9 +40,11 @@ export function OverviewTab({
               </div>
               <div className="flex-1 pb-2">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-medium text-white">Week {m.week}</p>
+                  <p className="font-medium text-white">
+                    {t("weekLabel", { week: m.week })}
+                  </p>
                   <p className="text-sm text-accent tabular-nums">
-                    ~{m.expected_weight_kg} kg
+                    ~{m.expected_weight_kg} {tCommon("kg")}
                   </p>
                 </div>
                 <p className="text-sm text-gray-400 mt-0.5">{m.focus}</p>
@@ -52,11 +59,13 @@ export function OverviewTab({
               <div className="h-3 w-3 rounded-full bg-amber-500/80 shrink-0" />
             </div>
             <div>
-              <p className="font-medium text-amber-200">Maintenance break</p>
+              <p className="font-medium text-amber-200">{t("maintenanceBreak")}</p>
               <p className="text-sm text-gray-400 mt-1">
-                After week {maintenanceWeek}, take a{" "}
-                {program.maintenance_break?.duration_label ?? "4–8 week"}{" "}
-                maintenance phase before your next fat-loss block.
+                {t("maintenanceAfter", {
+                  week: maintenanceWeek,
+                  duration:
+                    program.maintenance_break?.duration_label ?? "4–8 week",
+                })}
                 {program.maintenance_note && (
                   <span className="block mt-2">{program.maintenance_note}</span>
                 )}
@@ -67,7 +76,7 @@ export function OverviewTab({
       </div>
 
       <div className="rounded-xl border border-white/10 bg-background p-4">
-        <h3 className="text-sm font-medium text-white mb-2">Week highlights</h3>
+        <h3 className="text-sm font-medium text-white mb-2">{t("weekHighlights")}</h3>
         <ul className="space-y-2">
           {program.week_highlights.map((h, i) => (
             <li key={i} className="text-sm text-gray-400 flex gap-2">

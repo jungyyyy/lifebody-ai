@@ -8,6 +8,7 @@ import {
 import { ensureProgramPlans } from "@/lib/program/regeneratePlans";
 import type { BodyAssessment } from "@/types/onboarding";
 import type { GeneratedProgram } from "@/types/program";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function POST(request: Request) {
   const { user, supabase, premiumError } = await requirePremium();
@@ -37,7 +38,8 @@ export async function POST(request: Request) {
 
   try {
     const cookFreq = onboardingRes.data?.cook_frequency ?? "2-3x";
-    const updated = await ensureProgramPlans(supabase, user!.id, part);
+    const locale = await getRequestLocale(user!.id);
+    const updated = await ensureProgramPlans(supabase, user!.id, part, locale);
     const program = normalizeProgram(updated, {
       currentWeightKg: currentWeight,
       goalWeightKg: goalWeight,

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { WeeklyAssessmentCta } from "@/components/assessment/WeeklyAssessmentCta";
 import { FourWeekAnalysisCta } from "@/components/four-week/FourWeekAnalysisCta";
 import { WeightChart } from "@/components/progress/WeightChart";
@@ -39,6 +40,8 @@ interface WeightData {
 }
 
 export function ProgressPageClient() {
+  const t = useTranslations("progress");
+  const tCommon = useTranslations("common");
   const [list, setList] = useState<AssessmentListItem[]>([]);
   const [deepList, setDeepList] = useState<DeepAnalysisListItem[]>([]);
   const [weightData, setWeightData] = useState<WeightData | null>(null);
@@ -63,10 +66,8 @@ export function ProgressPageClient() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8 pb-24">
-      <h1 className="text-2xl font-semibold text-white">Progress</h1>
-      <p className="mt-2 text-sm text-gray-400">
-        Your weight trend, activity, and weekly coach assessments.
-      </p>
+      <h1 className="text-2xl font-semibold text-white">{t("title")}</h1>
+      <p className="mt-2 text-sm text-gray-400">{t("subtitle")}</p>
 
       <div className="mt-6 space-y-3">
         <FourWeekAnalysisCta />
@@ -74,7 +75,7 @@ export function ProgressPageClient() {
       </div>
 
       {loading ? (
-        <p className="mt-8 text-gray-500 animate-pulse">Loading…</p>
+        <p className="mt-8 text-gray-500 animate-pulse">{tCommon("loading")}</p>
       ) : (
         <>
           {weightData && (
@@ -91,11 +92,11 @@ export function ProgressPageClient() {
 
           <div className="mt-8">
             <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-              This week&apos;s activity
+              {t("thisWeekActivity")}
             </h2>
             {weekSports.length === 0 ? (
               <p className="text-sm text-gray-500 rounded-xl border border-dashed border-white/10 p-6 text-center">
-                No activity logged this week yet.
+                {t("noActivityWeek")}
               </p>
             ) : (
               <ul className="space-y-2 rounded-xl border border-white/10 bg-card divide-y divide-white/5">
@@ -109,7 +110,7 @@ export function ProgressPageClient() {
                     </span>
                     <span className="text-white font-medium">{s.activity}</span>
                     <span className="text-gray-500 tabular-nums">
-                      {s.duration_minutes} min
+                      {s.duration_minutes} {tCommon("min")}
                     </span>
                   </li>
                 ))}
@@ -119,11 +120,11 @@ export function ProgressPageClient() {
 
           <div className="mt-8">
             <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-              Deep analyses
+              {t("deepAnalyses")}
             </h2>
             {deepList.length === 0 ? (
               <p className="text-sm text-gray-500 rounded-xl border border-dashed border-violet-500/20 p-6 text-center mb-8">
-                Your first 4-week deep analysis unlocks at the end of week 4.
+                {t("firstFourWeekUnlock")}
               </p>
             ) : (
               <ul className="space-y-3 mb-8">
@@ -136,7 +137,7 @@ export function ProgressPageClient() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-medium text-violet-200">
-                            {item.week_range} deep analysis
+                            {t("deepAnalysisTitle", { range: item.week_range })}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {formatShortDate(item.period_start)} –{" "}
@@ -159,12 +160,11 @@ export function ProgressPageClient() {
 
           <div className="mt-8">
             <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-              Weekly assessments
+              {t("weeklyAssessmentsTitle")}
             </h2>
             {list.length === 0 ? (
               <p className="text-sm text-gray-500 rounded-xl border border-dashed border-white/10 p-6 text-center">
-                No assessments yet. They appear Sun–Wed once you&apos;ve been on
-                the program for 6+ days.
+                {t("noAssessmentsYet")}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -177,7 +177,7 @@ export function ProgressPageClient() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-medium text-white">
-                            Week {item.week_number} assessment
+                            {t("weekAssessment", { week: item.week_number })}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {formatShortDate(item.period_start)} –{" "}
@@ -191,7 +191,7 @@ export function ProgressPageClient() {
                               : "bg-amber-500/15 text-amber-200"
                           }`}
                         >
-                          {item.on_track ? "On track" : "Review"}
+                          {item.on_track ? t("onTrack") : t("review")}
                         </span>
                       </div>
                       <p className="mt-3 text-sm text-gray-400 line-clamp-2">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface FourWeekStatus {
   canShowCta: boolean;
@@ -14,6 +15,7 @@ interface FourWeekStatus {
 
 export function FourWeekAnalysisCta({ className = "" }: { className?: string }) {
   const router = useRouter();
+  const t = useTranslations("progress");
   const [status, setStatus] = useState<FourWeekStatus | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -33,10 +35,10 @@ export function FourWeekAnalysisCta({ className = "" }: { className?: string }) 
         className={`block rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-500/15 to-indigo-500/10 px-4 py-3.5 transition-colors hover:from-violet-500/20 ${className}`}
       >
         <p className="text-sm font-medium text-violet-200">
-          Your 4-Week Deep Analysis is ready 🔍
+          {t("fourWeekReady")}
         </p>
         <p className="text-xs text-violet-300/70 mt-0.5">
-          {status.weekRange} — tap to read
+          {t("fourWeekTapRead", { range: status.weekRange ?? "" })}
         </p>
       </Link>
     );
@@ -47,11 +49,11 @@ export function FourWeekAnalysisCta({ className = "" }: { className?: string }) 
       className={`rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-500/15 to-indigo-500/10 px-4 py-3.5 flex flex-wrap items-center justify-between gap-3 ${className}`}
     >
       <div>
-        <p className="text-sm font-medium text-violet-200">
-          Your 4-Week Deep Analysis is ready 🔍
-        </p>
+        <p className="text-sm font-medium text-violet-200">{t("fourWeekReady")}</p>
         <p className="text-xs text-violet-300/70 mt-0.5">
-          {status.weekRange ?? "4-week block"} — deeper patterns &amp; program review
+          {t("fourWeekBlockReview", {
+            range: status.weekRange ?? t("fourWeekBlockDefault"),
+          })}
         </p>
       </div>
       <button
@@ -71,7 +73,7 @@ export function FourWeekAnalysisCta({ className = "" }: { className?: string }) 
         }}
         className="rounded-lg bg-violet-500 px-4 py-2 text-sm font-medium text-white hover:bg-violet-400 disabled:opacity-50 shrink-0"
       >
-        {generating ? "Analyzing…" : "Generate analysis"}
+        {generating ? t("generating") : t("generateAnalysis")}
       </button>
     </div>
   );

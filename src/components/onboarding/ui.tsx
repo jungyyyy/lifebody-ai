@@ -134,15 +134,15 @@ export function RadioGroup({
   name: string;
   value: string;
   onChange: (v: string) => void;
-  options: readonly string[];
+  options: readonly { value: string; label: string }[];
 }) {
   return (
     <div className="space-y-2">
       {options.map((opt) => (
         <label
-          key={opt}
+          key={opt.value}
           className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
-            value === opt
+            value === opt.value
               ? "border-accent bg-accent/10"
               : "border-white/10 hover:border-white/20"
           }`}
@@ -150,12 +150,12 @@ export function RadioGroup({
           <input
             type="radio"
             name={name}
-            value={opt}
-            checked={value === opt}
-            onChange={() => onChange(opt)}
+            value={opt.value}
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
             className="h-4 w-4 accent-accent"
           />
-          <span className="text-sm text-gray-200">{opt}</span>
+          <span className="text-sm text-gray-200">{opt.label}</span>
         </label>
       ))}
     </div>

@@ -1,18 +1,8 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { BodyAssessment, OnboardingFormData } from "@/types/onboarding";
 import { LoadingDots, PrimaryButton } from "../ui";
-
-function phaseLabel(phase: BodyAssessment["phase"]) {
-  switch (phase) {
-    case "fat loss":
-      return "Fat loss";
-    case "muscle gain":
-      return "Muscle gain";
-    case "recomposition":
-      return "Fat loss + muscle building";
-    default:
-      return phase;
-  }
-}
 
 export function Step4Assessment({
   data,
@@ -25,11 +15,27 @@ export function Step4Assessment({
   error: string | null;
   onReady: () => void;
 }) {
+  const t = useTranslations("onboarding");
+  const tCommon = useTranslations("common");
+
+  function phaseLabel(phase: BodyAssessment["phase"]) {
+    switch (phase) {
+      case "fat loss":
+        return t("phaseFatLoss");
+      case "muscle gain":
+        return t("phaseMuscleGain");
+      case "recomposition":
+        return t("phaseRecomposition");
+      default:
+        return phase;
+    }
+  }
+
   if (loading) {
     return (
       <div className="py-12 text-center">
         <LoadingDots />
-        <p className="mt-4 text-gray-300">Analyzing your body profile...</p>
+        <p className="mt-4 text-gray-300">{t("analyzingProfile")}</p>
       </div>
     );
   }
@@ -38,9 +44,7 @@ export function Step4Assessment({
     return (
       <div className="py-8 text-center">
         <p className="text-red-400 text-sm">{error}</p>
-        <p className="mt-2 text-gray-500 text-xs">
-          Check GEMINI_API_KEY and GEMINI_MODEL in .env.local, then restart the dev server.
-        </p>
+        <p className="mt-2 text-gray-500 text-xs">{t("geminiHint")}</p>
       </div>
     );
   }
@@ -55,30 +59,39 @@ export function Step4Assessment({
       <div className="rounded-xl border border-white/10 bg-background p-5">
         <div className="flex items-center justify-between gap-4">
           <div className="text-center flex-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Current</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
+              {t("assessmentCurrent")}
+            </p>
             <p className="mt-1 text-2xl font-semibold text-white">
-              {current} <span className="text-sm font-normal text-gray-400">kg</span>
+              {current}{" "}
+              <span className="text-sm font-normal text-gray-400">
+                {tCommon("kg")}
+              </span>
             </p>
           </div>
           <div className="text-accent text-xl">→</div>
           <div className="text-center flex-1">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Goal</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
+              {t("assessmentGoal")}
+            </p>
             <p className="mt-1 text-2xl font-semibold text-accent">
               {assessment.goal_weight_kg}{" "}
-              <span className="text-sm font-normal text-gray-400">kg</span>
+              <span className="text-sm font-normal text-gray-400">
+                {tCommon("kg")}
+              </span>
             </p>
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-card px-3 py-2 text-center">
-            <p className="text-xs text-gray-500">Est. body fat</p>
+            <p className="text-xs text-gray-500">{t("estBodyFat")}</p>
             <p className="text-lg font-medium text-white">
               ~{assessment.estimated_body_fat_pct}%
             </p>
           </div>
           <div className="rounded-lg bg-card px-3 py-2 text-center">
-            <p className="text-xs text-gray-500">Your phase</p>
+            <p className="text-xs text-gray-500">{t("yourPhase")}</p>
             <p className="text-sm font-medium text-accent leading-tight mt-1">
               {phaseLabel(assessment.phase)}
             </p>
@@ -92,7 +105,7 @@ export function Step4Assessment({
         {assessment.motivational_close}
       </p>
 
-      <PrimaryButton onClick={onReady}>Yes, I&apos;m ready! →</PrimaryButton>
+      <PrimaryButton onClick={onReady}>{t("readyBtn")}</PrimaryButton>
     </div>
   );
 }

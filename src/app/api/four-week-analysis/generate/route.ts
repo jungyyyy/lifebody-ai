@@ -7,6 +7,7 @@ import {
 } from "@/lib/four-week/visibility";
 import { programWeekNumber } from "@/lib/program/dates";
 import { getProgramLengthWeeks } from "@/lib/program/profile";
+import { getRequestLocale } from "@/lib/i18n/server";
 
 export async function POST() {
   const { user, supabase, premiumError } = await requirePremium();
@@ -43,10 +44,12 @@ export async function POST() {
   }
 
   try {
+    const locale = await getRequestLocale(user!.id);
     const saved = await generateFourWeekAnalysis(
       supabase,
       user!.id,
-      blockNumber
+      blockNumber,
+      locale
     );
     return NextResponse.json({
       id: saved.id,

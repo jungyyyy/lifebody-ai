@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FourWeekAnalysisReport } from "@/components/four-week/FourWeekAnalysisReport";
 import type { FourWeekAnalysisData } from "@/types/fourWeekAnalysis";
 
 export function FourWeekDetailClient({ id }: { id: string }) {
+  const t = useTranslations("progress");
   const [data, setData] = useState<{
     analysis: FourWeekAnalysisData;
     week_range: string;
@@ -23,16 +25,16 @@ export function FourWeekDetailClient({ id }: { id: string }) {
         setData(json);
       })
       .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load")
+        setError(e instanceof Error ? e.message : t("failedLoad"))
       );
-  }, [id]);
+  }, [id, t]);
 
   if (error) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <p className="text-red-400">{error}</p>
         <Link href="/progress" className="mt-4 inline-block text-accent text-sm">
-          ← Back to progress
+          {t("backToProgress")}
         </Link>
       </div>
     );
@@ -41,7 +43,7 @@ export function FourWeekDetailClient({ id }: { id: string }) {
   if (!data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <p className="text-gray-500 animate-pulse">Loading deep analysis…</p>
+        <p className="text-gray-500 animate-pulse">{t("loadingDeepAnalysis")}</p>
       </div>
     );
   }
@@ -52,7 +54,7 @@ export function FourWeekDetailClient({ id }: { id: string }) {
         href="/progress"
         className="text-sm text-violet-300 hover:text-violet-200 mb-6 inline-block"
       >
-        ← Back to progress
+        {t("backToProgress")}
       </Link>
       <FourWeekAnalysisReport
         analysis={data.analysis}

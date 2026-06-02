@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import {
   AuthCard,
@@ -11,6 +12,7 @@ import {
 } from "@/components/AuthCard";
 
 export default function SignupPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,12 +25,12 @@ export default function SignupPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("passwordsNoMatch"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("passwordMin6"));
       return;
     }
 
@@ -55,13 +57,11 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <AuthCard title="Almost there">
-        <AuthMessage type="success">
-          Check your email to verify your account
-        </AuthMessage>
+      <AuthCard title={t("almostThere")}>
+        <AuthMessage type="success">{t("checkEmailVerify")}</AuthMessage>
         <p className="mt-4 text-sm text-gray-400 text-center">
-          Already verified?{" "}
-          <AuthLink href="/login">Sign in</AuthLink>
+          {t("alreadyVerified")}{" "}
+          <AuthLink href="/login">{t("signIn")}</AuthLink>
         </p>
       </AuthCard>
     );
@@ -69,12 +69,12 @@ export default function SignupPage() {
 
   return (
     <AuthCard
-      title="Create your account"
-      subtitle="Start your transformation journey with LifeBody AI"
+      title={t("createAccount")}
+      subtitle={t("createSubtitle")}
       footer={
         <p className="text-gray-400">
-          Already have an account?{" "}
-          <AuthLink href="/login">Sign in</AuthLink>
+          {t("hasAccount")}{" "}
+          <AuthLink href="/login">{t("signIn")}</AuthLink>
         </p>
       }
     >
@@ -82,37 +82,37 @@ export default function SignupPage() {
         {error && <AuthMessage type="error">{error}</AuthMessage>}
 
         <AuthInput
-          label="Email"
+          label={t("email")}
           id="email"
           type="email"
           value={email}
           onChange={setEmail}
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
         />
 
         <AuthInput
-          label="Password"
+          label={t("password")}
           id="password"
           type="password"
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder={t("passwordPlaceholder")}
         />
 
         <AuthInput
-          label="Confirm password"
+          label={t("confirmPassword")}
           id="confirm-password"
           type="password"
           value={confirmPassword}
           onChange={setConfirmPassword}
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder={t("passwordPlaceholder")}
         />
 
         <AuthButton disabled={loading}>
-          {loading ? "Creating account…" : "Sign up"}
+          {loading ? t("creatingAccount") : t("signUp")}
         </AuthButton>
       </form>
     </AuthCard>
