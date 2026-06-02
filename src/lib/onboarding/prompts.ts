@@ -7,6 +7,7 @@ import {
   weightToLoseKg,
 } from "@/lib/program/duration";
 import { cookFrequencyGuidance } from "@/lib/program/cookFrequency";
+import type { ProgramCalculation } from "@/lib/program/calorieTargets";
 
 function goalBodyLabel(id: string) {
   return GOAL_BODY_OPTIONS.find((g) => g.id === id)?.title ?? id;
@@ -46,17 +47,19 @@ Return JSON exactly matching this schema:
 
 export function buildProgramPrompt(
   data: OnboardingFormData,
-  assessment: NonNullable<OnboardingFormData["assessment"]>
+  assessment: NonNullable<OnboardingFormData["assessment"]>,
+  calculation: ProgramCalculation
 ): string {
   const weight = parseFloat(data.currentWeightKg);
   const height = parseFloat(data.heightCm);
   const weeklyRate = parseFloat(data.weeklyLossRateKg || "0.6");
   const toLose = weightToLoseKg(weight, assessment.goal_weight_kg);
   const programWeeks = calculateProgramWeeks(toLose, weeklyRate);
-  const proteinMin = Math.max(90, Math.round(weight * 1.8));
   const fasting = getFastingRecommendation(weight, height);
   const maintenance = needsMaintenanceBlock(toLose);
   const blockWeeks = maintenance ? 12 : programWeeks;
+  const beginnerRamp =
+    data.exerciseFrequency === "Never" || data.exerciseFrequency === "Rarely";
 
   return `You are LifeBody AI's program designer. Create a personalized ${programWeeks}-week lifestyle program.
 
@@ -82,9 +85,11 @@ LIFESTYLE:
 
 RULES (must follow):
 - Program length: exactly ${programWeeks} weeks
-- Weekly fat loss target: ${weeklyRate} kg/week
-- Calorie target: never below 1450 kcal/day
-- Protein: bodyweight × 1.8, minimum ${proteinMin}g/day
+- Use EXACTLY these pre-calculated nutrition targets (do not change):
+  - final_calories: ${calculation.final_calories}
+  - final_protein_g: ${calculation.final_protein_g}
+  - actual_weekly_loss_kg: ${calculation.actual_weekly_loss_kg}
+- Weekly fat loss in output must be actual_weekly_loss_kg above (not user requested pace when floor is applied)
 - Fasting (BMI rule): ${fasting.window}
 - fasting_is_intermittent: ${fasting.isIntermittentFasting}
 - Do NOT mention 16:8 or intermittent fasting if fasting_is_intermittent is false
@@ -93,15 +98,26 @@ ${maintenance ? `- User loses >8kg total. maintenance_break after week ${blockWe
 MEAL PLAN (meal prep): ${cookFrequencyGuidance(data.cookFrequency)}. Set A Mon-Wed, Set B Thu-Sun. Max 4 unique recipes for 2-3x/week cooks.
 
 WORKOUTS: ${data.exerciseFrequency}. Full gym unless restricted.
+${beginnerRamp ? '- Beginner progression is mandatory: 1 gym session/week for weeks 1-2, then 2 sessions/week from week 3 onward, and include this exact note in exercise_plan.overview: "Since you\'re new to working out, we\'re starting slow so you actually stick with it. One session in week 1-2, then we add a second session from week 3."' : ""}
 
 Return ONLY valid JSON:
 {
   "program_length_weeks": ${programWeeks},
-  "calorie_target": number,
-  "protein_target_g": number,
+  "calorie_target": ${calculation.final_calories},
+  "protein_target_g": ${calculation.final_protein_g},
   "fasting_window": string,
   "fasting_is_intermittent": boolean,
-  "weekly_fat_loss_kg": ${weeklyRate},
+  "weekly_fat_loss_kg": ${calculation.actual_weekly_loss_kg},
+  "calculation": {
+    "bmr": ${calculation.bmr},
+    "tdee": ${calculation.tdee},
+    "target_deficit": ${calculation.target_deficit},
+    "calculated_calories": ${calculation.calculated_calories},
+    "floor_applied": ${calculation.floor_applied},
+    "final_calories": ${calculation.final_calories},
+    "final_protein_g": ${calculation.final_protein_g},
+    "actual_weekly_loss_kg": ${calculation.actual_weekly_loss_kg}
+  },
   "phase_label": string,
   "maintenance_note": string or null,
   "meal_structure": { "overview": string, "daily_template": string },

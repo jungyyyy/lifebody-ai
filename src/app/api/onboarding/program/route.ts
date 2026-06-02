@@ -15,6 +15,10 @@ import {
   regenerateMealPlan,
 } from "@/lib/program/regeneratePlans";
 import {
+  beginnerWorkoutNote,
+  calculateProgramTargets,
+} from "@/lib/program/calorieTargets";
+import {
   hasValidFitnessPlan,
   hasValidMealPlan,
 } from "@/lib/program/validatePlans";
@@ -39,27 +43,56 @@ export async function POST(request: Request) {
     const weight = parseFloat(body.currentWeightKg);
     const height = parseFloat(body.heightCm);
     const weeklyRate = parseFloat(body.weeklyLossRateKg || "0.6");
+    const age = parseInt(body.age || "25", 10) || 25;
     const programWeeks = calculateProgramWeeks(
       weightToLoseKg(weight, body.assessment.goal_weight_kg),
       weeklyRate
     );
+    const calculation = calculateProgramTargets({
+      weightKg: weight,
+      heightCm: height,
+      age,
+      sex: body.sex || "prefer_not_to_say",
+      exerciseFrequency: body.exerciseFrequency,
+      weeklyLossRateKg: weeklyRate,
+    });
 
     const program = await generateGeminiJson<GeneratedProgram>(
-      buildProgramPrompt(body, body.assessment)
+      buildProgramPrompt(body, body.assessment, calculation)
     );
 
     program.program_length_weeks = programWeeks;
-    program.calorie_target = Math.max(1450, program.calorie_target);
-    program.protein_target_g = Math.max(
-      90,
-      Math.round(weight * 1.8),
-      program.protein_target_g
-    );
-    program.weekly_fat_loss_kg = weeklyRate;
+    // Hard enforce calculated targets; Gemini must not freestyle nutrition numbers.
+    program.calorie_target = calculation.final_calories;
+    program.protein_target_g = calculation.final_protein_g;
+    program.weekly_fat_loss_kg = calculation.actual_weekly_loss_kg;
+    program.calculation = calculation;
 
     const fasting = getFastingRecommendation(weight, height);
     program.fasting_window = fasting.window;
     program.fasting_is_intermittent = fasting.isIntermittentFasting;
+
+    if (calculation.floor_applied) {
+      const floorMsg =
+        body.sex === "female"
+          ? `I adjusted your calories to ${calculation.final_calories} kcal — the safe minimum for women. At this level you'll lose about ${calculation.actual_weekly_loss_kg}kg/week instead of ${weeklyRate}.`
+          : `I adjusted your calories to ${calculation.final_calories} kcal — the safe minimum for men. At this level you'll lose about ${calculation.actual_weekly_loss_kg}kg/week instead of ${weeklyRate}.`;
+      program.maintenance_note = program.maintenance_note
+        ? `${program.maintenance_note} ${floorMsg}`
+        : floorMsg;
+      program.block_summary = `${program.block_summary} ${floorMsg}`;
+    }
+
+    const beginnerNote = beginnerWorkoutNote(body.exerciseFrequency);
+    if (beginnerNote) {
+      program.exercise_plan.overview = `${program.exercise_plan.overview} ${beginnerNote}`;
+      if (program.fitness_plan) {
+        program.fitness_plan.sessions_per_week = Math.max(
+          1,
+          Math.min(2, program.fitness_plan.sessions_per_week || 1)
+        );
+      }
+    }
 
     if (!hasValidMealPlan(program.meal_plan)) {
       program.meal_plan = await regenerateMealPlan(body, program);

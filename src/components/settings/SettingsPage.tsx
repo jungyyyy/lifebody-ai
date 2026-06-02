@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -64,6 +65,16 @@ function Section({
       <div className="mt-4">{children}</div>
     </section>
   );
+}
+
+async function safeJson<T>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
 }
 
 export function SettingsPage({
@@ -239,22 +250,46 @@ export function SettingsPage({
 
   async function startCheckout(withTrial: boolean) {
     setCheckoutLoading(true);
-    const res = await fetch("/api/stripe/create-checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ withTrial }),
-    });
-    const json = await res.json();
-    if (json.url) window.location.href = json.url;
-    else setCheckoutLoading(false);
+    try {
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ withTrial }),
+      });
+      const json = await safeJson<{ url?: string; error?: string }>(res);
+      if (!res.ok) {
+        throw new Error(json?.error ?? "Could not start checkout");
+      }
+      if (json?.url) {
+        window.location.href = json.url;
+        return;
+      }
+      throw new Error("No checkout URL returned");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Could not start checkout");
+      setTimeout(() => setToast(null), 4000);
+      setCheckoutLoading(false);
+    }
   }
 
   async function openPortal() {
     setPortalLoading(true);
-    const res = await fetch("/api/stripe/create-portal", { method: "POST" });
-    const json = await res.json();
-    if (json.url) window.location.href = json.url;
-    else setPortalLoading(false);
+    try {
+      const res = await fetch("/api/stripe/create-portal", { method: "POST" });
+      const json = await safeJson<{ url?: string; error?: string }>(res);
+      if (!res.ok) {
+        throw new Error(json?.error ?? "Could not open portal");
+      }
+      if (json?.url) {
+        window.location.href = json.url;
+        return;
+      }
+      throw new Error("No portal URL returned");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "Could not open portal");
+      setTimeout(() => setToast(null), 4000);
+      setPortalLoading(false);
+    }
   }
 
   async function deleteAccount() {
@@ -312,9 +347,12 @@ export function SettingsPage({
                 }}
               />
               {avatarUrl && (
-                <img
+                <Image
                   src={avatarUrl}
-                  alt=""
+                  alt="Profile photo"
+                  width={64}
+                  height={64}
+                  unoptimized
                   className="mt-2 h-16 w-16 rounded-full object-cover"
                 />
               )}

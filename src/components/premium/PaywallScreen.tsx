@@ -34,6 +34,16 @@ export function PaywallScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function safeJson<T>(res: Response): Promise<T | null> {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return null;
+    }
+  }
+
   async function startCheckout(withTrial = true) {
     setLoading(true);
     setError(null);
@@ -57,11 +67,11 @@ export function PaywallScreen({
           withTrial,
         }),
       });
-      const json = await res.json();
+      const json = await safeJson<{ url?: string; error?: string }>(res);
       if (!res.ok) {
-        throw new Error(json.error ?? "Could not start checkout");
+        throw new Error(json?.error ?? "Could not start checkout");
       }
-      if (json.url) {
+      if (json?.url) {
         window.location.href = json.url;
         return;
       }

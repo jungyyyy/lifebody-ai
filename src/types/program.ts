@@ -198,6 +198,17 @@ export interface MaintenanceBreak {
   duration_label: string;
 }
 
+export interface ProgramCalculationDebug {
+  bmr: number;
+  tdee: number;
+  target_deficit: number;
+  calculated_calories: number;
+  floor_applied: boolean;
+  final_calories: number;
+  final_protein_g: number;
+  actual_weekly_loss_kg: number;
+}
+
 export interface GeneratedProgram {
   program_length_weeks: number;
   calorie_target: number;
@@ -225,6 +236,7 @@ export interface GeneratedProgram {
   mindset_notes?: string[];
   week_milestones?: WeekMilestone[];
   maintenance_break?: MaintenanceBreak | null;
+  calculation?: ProgramCalculationDebug;
 }
 
 export interface FullProgram extends GeneratedProgram {

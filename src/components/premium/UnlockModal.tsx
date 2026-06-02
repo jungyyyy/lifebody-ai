@@ -22,6 +22,16 @@ export function UnlockModal({
   const [loading, setLoading] = useState<"trial" | "paid" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function safeJson<T>(res: Response): Promise<T | null> {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return null;
+    }
+  }
+
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -58,9 +68,9 @@ export function UnlockModal({
           withTrial,
         }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Could not start checkout");
-      if (json.url) {
+      const json = await safeJson<{ url?: string; error?: string }>(res);
+      if (!res.ok) throw new Error(json?.error ?? "Could not start checkout");
+      if (json?.url) {
         window.location.href = json.url;
         return;
       }
