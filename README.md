@@ -62,4 +62,4 @@ through sustainable lifestyle change.
 
 ## Status
 
-🟡 In active development
+Try it here!(lifebody-ai.vercel.app)
