@@ -62,4 +62,4 @@ through sustainable lifestyle change.
 
 ## Status
 
-[Try it here!](https://lifebody-ai.vercel.app/login)
+✅ Live [Try it here!](https://lifebody-ai.vercel.app/login)
