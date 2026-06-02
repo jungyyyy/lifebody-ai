@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { localeNames, locales, type Locale } from "@/i18n/routing";
 
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const t = useTranslations("language");
   const locale = useLocale() as Locale;
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -40,7 +41,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
     }
 
     startTransition(() => {
-      router.replace(window.location.pathname, { locale: next });
+      router.replace(pathname, { locale: next });
       router.refresh();
     });
   }

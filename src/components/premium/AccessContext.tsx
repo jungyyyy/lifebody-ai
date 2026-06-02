@@ -8,7 +8,8 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import type { AccessState } from "@/lib/premium";
 import { UnlockModal } from "./UnlockModal";
 

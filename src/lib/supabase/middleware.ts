@@ -1,21 +1,45 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  getLocaleFromPathname,
+  pathnameWithoutLocale,
+  withLocalePath,
+} from "@/lib/i18n/pathname";
+import type { Locale } from "@/i18n/routing";
 
-const PUBLIC_ROUTES = [
+const PUBLIC_PATHS = [
   "/login",
   "/signup",
   "/forgot-password",
-  "/auth/callback",
 ];
 
-function isPublicRoute(pathname: string) {
-  return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+function isPublicPath(pathWithoutLocale: string) {
+  return PUBLIC_PATHS.some(
+    (route) =>
+      pathWithoutLocale === route ||
+      pathWithoutLocale.startsWith(`${route}/`)
   );
 }
 
-function isAuthPage(pathname: string) {
-  return pathname === "/login" || pathname === "/signup";
+function isAuthPage(pathWithoutLocale: string) {
+  return pathWithoutLocale === "/login" || pathWithoutLocale === "/signup";
+}
+
+function localizedRedirect(
+  request: NextRequest,
+  locale: Locale,
+  path: string,
+  intlResponse?: NextResponse
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = withLocalePath(locale, path);
+  const response = NextResponse.redirect(url);
+  if (intlResponse) {
+    intlResponse.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value);
+    });
+  }
+  return response;
 }
 
 export async function updateSession(
@@ -58,12 +82,12 @@ export async function updateSession(
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const locale = getLocaleFromPathname(pathname);
+  const path = pathnameWithoutLocale(pathname);
 
   if (!user) {
-    if (!isPublicRoute(pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
+    if (!isPublicPath(path)) {
+      return localizedRedirect(request, locale, "/login", intlResponse);
     }
     return supabaseResponse;
   }
@@ -77,36 +101,28 @@ export async function updateSession(
   const onboardingCompleted = profile?.onboarding_completed === true;
 
   if (
-    pathname.startsWith("/api/onboarding") ||
-    pathname.startsWith("/api/journal") ||
-    pathname.startsWith("/api/logs") ||
-    pathname.startsWith("/api/dashboard") ||
-    pathname.startsWith("/api/program") ||
-    pathname.startsWith("/api/assessment") ||
-    pathname.startsWith("/api/progress") ||
-    pathname.startsWith("/api/four-week-analysis") ||
-    pathname.startsWith("/api/stripe") ||
-    pathname.startsWith("/api/settings")
+    path.startsWith("/api/") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/")
   ) {
     return supabaseResponse;
   }
 
-  if (isAuthPage(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = onboardingCompleted ? "/dashboard" : "/onboarding";
-    return NextResponse.redirect(url);
+  if (isAuthPage(path)) {
+    return localizedRedirect(
+      request,
+      locale,
+      onboardingCompleted ? "/dashboard" : "/onboarding",
+      intlResponse
+    );
   }
 
-  if (!onboardingCompleted && pathname !== "/onboarding") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/onboarding";
-    return NextResponse.redirect(url);
+  if (!onboardingCompleted && path !== "/onboarding") {
+    return localizedRedirect(request, locale, "/onboarding", intlResponse);
   }
 
-  if (onboardingCompleted && pathname === "/onboarding") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  if (onboardingCompleted && path === "/onboarding") {
+    return localizedRedirect(request, locale, "/dashboard", intlResponse);
   }
 
   return supabaseResponse;

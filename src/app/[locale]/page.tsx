@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { localizedRedirect } from "@/lib/i18n/serverRedirect";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
@@ -8,7 +8,8 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    await localizedRedirect("/login");
+    return null;
   }
 
   const { data: profile } = await supabase
@@ -18,8 +19,8 @@ export default async function HomePage() {
     .single();
 
   if (profile?.onboarding_completed) {
-    redirect("/dashboard");
+    await localizedRedirect("/dashboard");
   }
 
-  redirect("/onboarding");
+  await localizedRedirect("/onboarding");
 }

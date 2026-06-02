@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
+import { localizedRedirect } from "@/lib/i18n/serverRedirect";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/app/AppShell";
@@ -20,7 +20,8 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    await localizedRedirect("/login");
+    return null;
   }
 
   const { data: profile } = await supabase
@@ -30,7 +31,7 @@ export default async function AppLayout({
     .single();
 
   if (!profile?.onboarding_completed) {
-    redirect("/onboarding");
+    await localizedRedirect("/onboarding");
   }
 
   const t = await getTranslations("common");

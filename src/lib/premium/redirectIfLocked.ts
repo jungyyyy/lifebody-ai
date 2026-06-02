@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { localizedRedirect } from "@/lib/i18n/serverRedirect";
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchPremiumProfile,
@@ -12,13 +12,16 @@ export async function redirectIfPremiumLocked() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    await localizedRedirect("/login");
+    return;
+  }
 
   const profile = await fetchPremiumProfile(supabase, user.id);
   const state = getAccessState(profile);
 
   if (shouldLockPremiumTabs(state)) {
     const unlock = state === "trial_expired" ? "expired" : "new";
-    redirect(`/dashboard?unlock=${unlock}`);
+    await localizedRedirect(`/dashboard?unlock=${unlock}`);
   }
 }

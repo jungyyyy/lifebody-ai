@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import type { AccessState } from "@/lib/premium";
 import { useAccess } from "@/components/premium/AccessContext";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";

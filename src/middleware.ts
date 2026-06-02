@@ -7,12 +7,11 @@ const handleI18n = createIntlMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
   const intlResponse = handleI18n(request);
-  const sessionResponse = await updateSession(request, intlResponse);
-  return sessionResponse;
+  return await updateSession(request, intlResponse);
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api|auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
